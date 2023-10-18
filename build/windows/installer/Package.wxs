@@ -1,5 +1,5 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
-    <!-- ToDo use your own keys for Name and Manufacturer, as well as a new UUID for UpgradeCode -->
+    <!-- hook_the_game use your own keys for Name and Manufacturer, as well as a new UUID for UpgradeCode -->
     <Package
         Name="BevyGame"
         Manufacturer="My Name"
@@ -35,7 +35,7 @@
         <!-- Installs the actual files -->
         <ComponentGroup Id="MainComponent" Directory="INSTALLFOLDER">
             <Component>
-                <File Id="Executable" Source="..\..\..\target\release\bevy_game.exe" Vital="true" />  <!-- ToDo this should point to your executable -->
+                <File Id="Executable" Source="..\..\..\target\release\bevy_game.exe" Vital="true" />  <!-- hook_the_game this should point to your executable -->
             </Component>
         </ComponentGroup>
 
