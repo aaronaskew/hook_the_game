@@ -1,13 +1,11 @@
 [package]
-name = "bevy_game" # hook_the_game
+name = "bevy_game"                               # hook_the_game
 version = "0.1.0"
 publish = false
-authors = ["Niklas Eicker <git@nikl.me>"] # hook_the_game: you are the author ;)
+authors = ["Niklas Eicker <git@nikl.me>"]        # hook_the_game: you are the author ;)
 edition = "2021"
 exclude = ["dist", "build", "assets", "credits"]
 
-[workspace]
-members = ["mobile"]
 
 [profile.dev.package."*"]
 opt-level = 3
@@ -25,9 +23,7 @@ inherits = "release"
 lto = "thin"
 
 [features]
-dev = [
-    "bevy/bevy_dylib",
-]
+dev = ["bevy/bevy_dylib"]
 
 # All of Bevy's default features exept for the audio related ones, since they clash with bevy_kira_audio
 #   and android_shared_stdcxx, since that is covered in `mobile`
