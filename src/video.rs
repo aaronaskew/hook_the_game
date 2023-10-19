@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 // TODO wasm veilid
 // #[cfg(target_arch = "wasm32")]
-// use veilid_core:: 
+// use veilid_core::
 // #[cfg(not(target_arch = "wasm32"))]
 // use veilid_core::prelude::*;
 

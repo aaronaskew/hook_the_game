@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy::winit::WinitWindows;
 use bevy::DefaultPlugins;
-use hook_the_game::GamePlugin; 
+use hook_the_game::GamePlugin;
 use std::io::Cursor;
 use winit::window::Icon;
 
@@ -15,7 +15,7 @@ fn main() {
         .insert_resource(ClearColor(Color::rgb(0.4, 0.4, 0.4)))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                title: "Hook - The Game".to_string(), 
+                title: "Hook - The Game".to_string(),
                 resolution: (800., 600.).into(),
                 // Bind to canvas included in `index.html`
                 canvas: Some("#bevy".to_owned()),
