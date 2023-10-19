@@ -2,6 +2,12 @@
 use crate::GameState;
 use bevy::prelude::*;
 
+// TODO wasm veilid
+// #[cfg(target_arch = "wasm32")]
+// use veilid_core:: 
+// #[cfg(not(target_arch = "wasm32"))]
+// use veilid_core::prelude::*;
+
 pub struct VideoPlugin;
 
 /// This plugin is responsible for the playing video.
