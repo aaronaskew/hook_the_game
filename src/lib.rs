@@ -5,12 +5,14 @@ mod audio;
 mod loading;
 mod menu;
 mod player;
+mod video;
 
 use crate::actions::ActionsPlugin;
 use crate::audio::InternalAudioPlugin;
 use crate::loading::LoadingPlugin;
 use crate::menu::MenuPlugin;
 use crate::player::PlayerPlugin;
+use crate::video::VideoPlugin;
 
 use bevy::app::App;
 #[cfg(debug_assertions)]
@@ -29,6 +31,8 @@ enum GameState {
     Playing,
     // Here the menu is drawn and waiting for player interaction
     Menu,
+    // Here the cutscene is played
+    CutScene,
 }
 
 pub struct GamePlugin;
@@ -41,6 +45,7 @@ impl Plugin for GamePlugin {
             ActionsPlugin,
             InternalAudioPlugin,
             PlayerPlugin,
+            VideoPlugin,
         ));
 
         #[cfg(debug_assertions)]

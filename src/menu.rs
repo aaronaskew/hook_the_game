@@ -63,6 +63,7 @@ fn click_play_button(
         (&Interaction, &mut BackgroundColor),
         (Changed<Interaction>, With<Button>),
     >,
+    mut text: Query<&mut Text>,
 ) {
     for (interaction, mut color) in &mut interaction_query {
         match *interaction {
@@ -71,9 +72,12 @@ fn click_play_button(
             }
             Interaction::Hovered => {
                 *color = button_colors.hovered.into();
+                text.single_mut().sections[0].value = "yalP".to_string();
+                eprintln!("Hovered");
             }
             Interaction::None => {
                 *color = button_colors.normal.into();
+                text.single_mut().sections[0].value = "Play".to_string();
             }
         }
     }

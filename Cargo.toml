@@ -1,8 +1,8 @@
 [package]
-name = "hook_the_game"                               
+name = "hook_the_game"
 version = "0.1.0"
 publish = false
-authors = ["Aaron Askew <aaronaskew@gmail.com>"]        
+authors = ["Aaron Askew <aaronaskew@gmail.com>"]
 edition = "2021"
 exclude = ["dist", "build", "assets", "credits"]
 
@@ -59,6 +59,7 @@ rand = { version = "0.8.3" }
 # keep the following in sync with Bevy's dependencies
 winit = { version = "0.28", default-features = false }
 image = { version = "0.24", default-features = false }
+veilid-core = "0.2.4"
 
 [build-dependencies]
 embed-resource = "1.4"
