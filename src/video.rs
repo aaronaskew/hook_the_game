@@ -6,7 +6,6 @@ use bevy::prelude::*;
 // #[cfg(target_arch = "wasm32")]
 // use veilid_core::
 // #[cfg(not(target_arch = "wasm32"))]
-// use veilid_core::prelude::*;
 
 pub struct VideoPlugin;
 
