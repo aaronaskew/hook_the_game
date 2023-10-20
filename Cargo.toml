@@ -63,14 +63,3 @@ image = { version = "0.24", default-features = false }
 
 [build-dependencies]
 embed-resource = "1.4"
-
-
-## Veilid ##
-
-# allow defaults for other targets
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-veilid-core = {version = "0.2"} 
-
-# disable defaults for wasm32
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-veilid-core = { version = "0.2", default-features = false, features = ["default-wasm"]} 
