@@ -1,3 +1,4 @@
+![CI](https://github.com/aaronaskew/hook_the_game/actions/workflows/ci.yml/badge.svg?branch=main)
 # A Bevy game template
 
 Template for a Game using the awesome [Bevy engine][bevy] featuring out of the box builds for Windows, Linux, macOS, and Web (Wasm). It also includes the setup for android support.
