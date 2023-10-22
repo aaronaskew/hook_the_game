@@ -1,6 +1,8 @@
 #![allow(unused)]
-use crate::GameState;
+use crate::{video, GameState};
 use bevy::prelude::*;
+use wasm_bindgen::JsCast;
+use web_sys::{HtmlVideoElement, HtmlCanvasElement};
 
 pub struct VideoPlugin;
 
@@ -31,6 +33,21 @@ impl Plugin for VideoPlugin {
 
 fn setup_video(mut commands: Commands) {
     todo!("setup_video");
+
+    let window = web_sys::window().expect("no window!");
+    let document = window.document().expect("no document!");
+    let video_element = document.get_element_by_id("video").expect("no video!");
+    let video: HtmlVideoElement = video_element
+        .dyn_into::<HtmlVideoElement>()
+        .expect("element to be a video");
+    let canvas:HtmlCanvasElement = document
+        .get_element_by_id("bevy")
+        .expect("there to be a canvas element named 'bevy'").dyn_into().expect("element to be a canvas");
+    video.set_visible(true);
+    video.set_width(canvas.width());
+    video.set_height(canvas.height());
+    video.set_preload("auto");
+    video.set_attribute("hidden", "");
 
     // commands.spawn(Camera2dBundle::default());
     // commands

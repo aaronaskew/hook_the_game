@@ -1847,6 +1847,8 @@ dependencies = [
  "embed-resource",
  "image",
  "rand",
+ "wasm-bindgen",
+ "web-sys",
  "winit",
 ]
 
