@@ -2,7 +2,7 @@
 use crate::{video, GameState};
 use bevy::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{HtmlVideoElement, HtmlCanvasElement};
+use web_sys::{HtmlCanvasElement, HtmlVideoElement};
 
 pub struct VideoPlugin;
 
@@ -40,9 +40,11 @@ fn setup_video(mut commands: Commands) {
     let video: HtmlVideoElement = video_element
         .dyn_into::<HtmlVideoElement>()
         .expect("element to be a video");
-    let canvas:HtmlCanvasElement = document
+    let canvas: HtmlCanvasElement = document
         .get_element_by_id("bevy")
-        .expect("there to be a canvas element named 'bevy'").dyn_into().expect("element to be a canvas");
+        .expect("there to be a canvas element named 'bevy'")
+        .dyn_into()
+        .expect("element to be a canvas");
     video.set_visible(true);
     video.set_width(canvas.width());
     video.set_height(canvas.height());

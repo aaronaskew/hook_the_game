@@ -1,0 +1,24 @@
+name: deploy-video-testing-github-pages
+
+on:
+  workflow_dispatch:
+  push: 
+    paths:
+      - 'video-testing/**'
+
+permissions:
+  contents: write
+
+jobs:
+  build-web:
+    concurrency: ci-${{ github.ref }} # Recommended if you intend to make multiple deployments in quick succession.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4.2.5
+        with:
+          branch: gh-pages
+          folder: video-testing
+          target-folder: video-testing
