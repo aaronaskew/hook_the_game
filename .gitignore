@@ -2,5 +2,5 @@ target/
 .idea/
 .DS_Store
 .cargo/
-
+node_modules/
 dist/
