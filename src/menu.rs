@@ -30,7 +30,7 @@ impl Default for ButtonColors {
 }
 
 fn setup_menu(mut commands: Commands, button_colors: Res<ButtonColors>) {
-    commands.spawn(Camera2dBundle::default());
+
     commands
         .spawn(ButtonBundle {
             style: Style {
