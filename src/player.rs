@@ -7,9 +7,7 @@ use bevy::prelude::*;
 pub struct PlayerPlugin;
 
 #[derive(Component)]
-pub struct Player {
-    // alive: bool,
-}
+pub struct Player {}
 
 #[derive(Component)]
 pub struct AnimationTimer {
@@ -21,16 +19,20 @@ pub struct AnimationTimer {
 /// Player logic is only active during the State `GameState::Playing`
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::Playing), spawn_player)
+        app.add_systems(OnEnter(GameState::SpawningPlayer), spawn_player)
             .add_systems(OnExit(GameState::Playing), despawn_player)
-            .add_systems(Update, move_player.run_if(in_state(GameState::Playing)))
-            .add_systems(Update, update_player_animation);
+            .add_systems(
+                Update,
+                (move_player, update_player_animation).run_if(in_state(GameState::Playing)),
+            );
     }
 }
 
-fn spawn_player(mut commands: Commands, player_walk: Res<PlayerWalk>) {
+pub fn spawn_player(mut commands: Commands, player_walk: Res<PlayerWalk>, mut state :ResMut<NextState<GameState>>) {
+    console_log!("spawn_player start");
+
     let sprite = TextureAtlasSprite {
-        custom_size: Some(Vec2::splat(140.)),
+        //custom_size: Some(Vec2::splat(140.)),
         ..default()
     };
 
@@ -46,7 +48,13 @@ fn spawn_player(mut commands: Commands, player_walk: Res<PlayerWalk>) {
                 frame_count: 3,
             },
         ))
-        .insert(Player {});
+        .insert(Player {})
+        .insert(Name::new("player"));
+
+    // After spawning the player, we need to setup the physics
+    state.set(GameState::InitializingPhysics);
+    
+    console_log!("spawn_player end");
 }
 
 fn move_player(
