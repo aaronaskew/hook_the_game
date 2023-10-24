@@ -1,3 +1,4 @@
+#![allow(unused_variables)]
 /// Debugging tools
 use bevy::prelude::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
@@ -14,16 +15,16 @@ impl Plugin for DebugPlugin {
 }
 
 fn debug_update(
-    mut commands: Commands,
-    query: Query<(&Transform, Option<&Name>)>,
-    state: Res<State<GameState>>,
+    mut _commands: Commands,
+    _query: Query<(&Transform, Option<&Name>)>,
+    _state: Res<State<GameState>>,
 ) {
-    for (transform, name) in query.iter() {
-        console_log!(
-            "state: {:?} name: {:?} transform: {:?}",
-            state,
-            name,
-            transform,
-        );
-    }
+    // console_log!("debug_update start");
+    // console_log!("state: {:?}, got {} Transforms", state, query.iter().len());
+
+    // for (i, (t, n)) in query.iter().enumerate() {
+    //     console_log!("idx: {} name: {:?} transform: {:?}", i, n, t,);
+    // }
+
+    // console_log!("debug_update end");
 }

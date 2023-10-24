@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::primitives::Aabb}; 
+use bevy::{prelude::*, render::primitives::Aabb};
 use bevy_rapier2d::prelude::*;
 
 use crate::{player::*, GameState};
@@ -15,17 +15,18 @@ impl Plugin for PhysicsPlugin {
             PIXELS_PER_METER,
         ))
         .add_plugins(RapierDebugRenderPlugin::default())
-        .add_systems(
-            OnEnter(GameState::Playing),
-            setup_physics.after(spawn_player),
-        );
+        .add_systems(OnEnter(GameState::InitializingPhysics), setup_physics);
         //.add_system(print_ball_altitude);
     }
 }
 
-pub fn setup_physics(mut commands: Commands, query: Query<(Entity, &Transform)>) {
+pub fn setup_physics(
+    mut commands: Commands,
+    query: Query<(Entity, &Transform, Option<&Name>)>,
+    mut state: ResMut<NextState<GameState>>,
+) {
     console_log!("setup_physics start");
-    
+
     /* Create the ground. */
     commands
         .spawn(Collider::cuboid(500.0, 50.0))
@@ -41,12 +42,8 @@ pub fn setup_physics(mut commands: Commands, query: Query<(Entity, &Transform)>)
     // Setup Player Physics
 
     console_log!("player query: {:#?}", query);
-    for (e, t) in query.iter() {
-        console_log!(
-            "after spawn player\n\nentity: {:#?}\ntransform: {:#?}",
-            e,
-            t
-        );
+    for (e, t, name) in query.iter() {
+        console_log!("name: {:?} entity: {:#?}\ntransform: {:#?}", name, e, t);
     }
 
     // let (entity, aabb) = player.single();
@@ -55,7 +52,8 @@ pub fn setup_physics(mut commands: Commands, query: Query<(Entity, &Transform)>)
     //     .insert(RigidBody::Dynamic)
     //     .insert(Collider::cuboid(aabb.half_extents.x, aabb.half_extents.y));
 
+    // After initializing the physics, we can start the game
+    state.set(GameState::Playing);
+
     console_log!("setup_physics end");
 }
-
-

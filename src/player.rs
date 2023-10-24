@@ -20,17 +20,16 @@ pub struct AnimationTimer {
 /// Player logic is only active during the State `GameState::Playing`
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            OnEnter(GameState::Playing),
-            spawn_player.before(setup_physics),
-        )
-        .add_systems(OnExit(GameState::Playing), despawn_player)
-        .add_systems(Update, move_player.run_if(in_state(GameState::Playing)))
-        .add_systems(Update, update_player_animation);
+        app.add_systems(OnEnter(GameState::SpawningPlayer), spawn_player)
+            .add_systems(OnExit(GameState::Playing), despawn_player)
+            .add_systems(
+                Update,
+                (move_player, update_player_animation).run_if(in_state(GameState::Playing)),
+            );
     }
 }
 
-pub fn spawn_player(mut commands: Commands, player_walk: Res<PlayerWalk>) {
+pub fn spawn_player(mut commands: Commands, player_walk: Res<PlayerWalk>, mut state :ResMut<NextState<GameState>>) {
     console_log!("spawn_player start");
 
     let sprite = TextureAtlasSprite {
@@ -53,6 +52,9 @@ pub fn spawn_player(mut commands: Commands, player_walk: Res<PlayerWalk>) {
         .insert(Player {})
         .insert(Name::new("player"));
 
+    // After spawning the player, we need to setup the physics
+    state.set(GameState::InitializingPhysics);
+    
     console_log!("spawn_player end");
 }
 
