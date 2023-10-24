@@ -22,7 +22,7 @@ impl Plugin for PhysicsPlugin {
 
 pub fn setup_physics(
     mut commands: Commands,
-    query: Query<(Entity, &Transform, Option<&Name>)>,
+    query: Query<(Entity, &Aabb), With<Player>>,
     mut state: ResMut<NextState<GameState>>,
 ) {
     console_log!("setup_physics start");
@@ -41,10 +41,12 @@ pub fn setup_physics(
 
     // Setup Player Physics
 
-    console_log!("player query: {:#?}", query);
-    for (e, t, name) in query.iter() {
-        console_log!("name: {:?} entity: {:#?}\ntransform: {:#?}", name, e, t);
-    }
+    
+    let (entity, aabb) = query.single();
+    commands
+        .entity(entity)
+        .insert(RigidBody::Dynamic)
+        .insert(Collider::cuboid(aabb.half_extents.x, aabb.half_extents.y));
 
     // let (entity, aabb) = player.single();
     // commands

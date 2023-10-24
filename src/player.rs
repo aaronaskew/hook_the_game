@@ -1,7 +1,6 @@
 use crate::actions::Actions;
 use crate::loading::PlayerWalk;
 // use crate::video;
-use crate::physics::setup_physics;
 use crate::GameState;
 use bevy::prelude::*;
 
