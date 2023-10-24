@@ -74,6 +74,7 @@ web-sys = { version = "0.3.64", features = [
     "UiEvent",
     "console",
 ] }
+bevy_rapier2d = { version = "0.22.0", features = ["wasm-bindgen"] }
 
 [build-dependencies]
 embed-resource = "1.4"
