@@ -32,7 +32,7 @@ enum GameState {
     // Here the menu is drawn and waiting for player interaction
     Menu,
     // Here the cutscene is played
-    CutScene,
+    PlayingCutScene,
 }
 
 pub struct GamePlugin;
