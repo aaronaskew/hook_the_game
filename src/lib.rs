@@ -2,6 +2,8 @@
 
 mod actions;
 mod audio;
+#[macro_use]
+mod utils;
 mod loading;
 mod menu;
 mod player;

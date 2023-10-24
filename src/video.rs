@@ -7,20 +7,6 @@ const CUTSCENE_VIDEO_FILE: &str = "assets/video/cutscene.mp4";
 const CUTSCENE_HTML_ID: &str = "cutscene";
 const CUTSCENE_NEXT_STATE: GameState = GameState::Menu;
 
-#[wasm_bindgen]
-extern "C" {
-    // Use `js_namespace` here to bind `console.log(..)` instead of just
-    // `log(..)`
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
-}
-
-macro_rules! console_log {
-    // Note that this is using the `log` function imported above during
-    // `bare_bones`
-    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
-}
-
 pub struct VideoPlugin;
 
 #[derive(Default, Debug, PartialEq)]
