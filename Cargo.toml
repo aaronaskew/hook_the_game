@@ -23,7 +23,7 @@ inherits = "release"
 lto = "thin"
 
 [features]
-dev = ["bevy/bevy_dylib"]
+dev = ["bevy/bevy_dylib", "bevy/dynamic_linking"]
 
 # All of Bevy's default features exept for the audio related ones, since they clash with bevy_kira_audio
 #   and android_shared_stdcxx, since that is covered in `mobile`
@@ -75,6 +75,7 @@ web-sys = { version = "0.3.64", features = [
     "console",
 ] }
 bevy_rapier2d = { version = "0.22.0", features = ["wasm-bindgen"] }
+bevy-inspector-egui = "0.20.0"
 
 [build-dependencies]
 embed-resource = "1.4"
