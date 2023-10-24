@@ -13,18 +13,22 @@ fn main() {
     App::new()
         .insert_resource(Msaa::Off)
         .insert_resource(ClearColor(Color::rgb(0.4, 0.4, 0.4)))
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                title: "Hook - The Game".to_string(),
-                resolution: (800., 600.).into(),
-                // Bind to canvas included in `index.html`
-                canvas: Some("#bevy".to_owned()),
-                // Tells wasm not to override default event handling, like F5 and Ctrl+R
-                prevent_default_event_handling: false,
-                ..default()
-            }),
-            ..default()
-        }))
+        .add_plugins(
+            DefaultPlugins
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "Hook - The Game".to_string(),
+                        resolution: (800., 600.).into(),
+                        // Bind to canvas included in `index.html`
+                        canvas: Some("#bevy".to_owned()),
+                        // Tells wasm not to override default event handling, like F5 and Ctrl+R
+                        prevent_default_event_handling: false,
+                        ..default()
+                    }),
+                    ..default()
+                })
+                .set(ImagePlugin::default_nearest()),
+        )
         .add_plugins(GamePlugin)
         .add_systems(Startup, set_window_icon)
         .run();

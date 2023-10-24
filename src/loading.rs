@@ -1,5 +1,6 @@
 use crate::GameState;
 use bevy::prelude::*;
+use bevy_asset_loader::asset_collection::AssetCollection;
 use bevy_asset_loader::prelude::*;
 use bevy_kira_audio::AudioSource;
 
@@ -14,7 +15,7 @@ impl Plugin for LoadingPlugin {
             LoadingState::new(GameState::Loading).continue_to_state(GameState::Menu),
         )
         .add_collection_to_loading_state::<_, AudioAssets>(GameState::Loading)
-        .add_collection_to_loading_state::<_, TextureAssets>(GameState::Loading)
+        .add_collection_to_loading_state::<_, PlayerWalk>(GameState::Loading)
         .add_systems(OnExit(GameState::Loading), spawn_camera);
     }
 }
@@ -28,10 +29,18 @@ pub struct AudioAssets {
     pub flying: Handle<AudioSource>,
 }
 
+// #[derive(AssetCollection, Resource)]
+// pub struct TextureAssets {
+//     #[asset(path = "textures/bevy.png")]
+//     pub texture_bevy: Handle<Image>,
+
+// }
+
 #[derive(AssetCollection, Resource)]
-pub struct TextureAssets {
-    #[asset(path = "textures/bevy.png")]
-    pub texture_bevy: Handle<Image>,
+pub struct PlayerWalk {
+    #[asset(texture_atlas(tile_size_x = 32., tile_size_y = 32., columns = 3, rows = 1))]
+    #[asset(path = "sprites/hook_sheet.png")]
+    pub walking: Handle<TextureAtlas>,
 }
 
 fn spawn_camera(mut commands: Commands) {

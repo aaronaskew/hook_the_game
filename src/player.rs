@@ -1,36 +1,74 @@
 use crate::actions::Actions;
-use crate::loading::TextureAssets;
+use crate::loading::PlayerWalk;
+use crate::video;
 use crate::GameState;
 use bevy::prelude::*;
+use wasm_bindgen::prelude::wasm_bindgen;
+
+#[wasm_bindgen]
+extern "C" {
+    // Use `js_namespace` here to bind `console.log(..)` instead of just
+    // `log(..)`
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+}
+
+macro_rules! console_log {
+    // Note that this is using the `log` function imported above during
+    // `bare_bones`
+    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
+}
 
 pub struct PlayerPlugin;
 
 #[derive(Component)]
-pub struct Player;
+pub struct Player {
+    alive: bool,
+}
+
+#[derive(Component)]
+pub struct AnimationTimer {
+    pub timer: Timer,
+    pub frame_count: usize,
+}
 
 /// This plugin handles player related stuff like movement
 /// Player logic is only active during the State `GameState::Playing`
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::Playing), spawn_player)
-            .add_systems(Update, move_player.run_if(in_state(GameState::Playing)));
+            .add_systems(OnExit(GameState::Playing), despawn_player)
+            .add_systems(Update, move_player.run_if(in_state(GameState::Playing)))
+            .add_systems(Update, update_player_animation);
     }
 }
 
-fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>) {
+fn spawn_player(mut commands: Commands, player_walk: Res<PlayerWalk>) {
+    let sprite = TextureAtlasSprite {
+        custom_size: Some(Vec2::splat(140.)),
+        ..default()
+    };
+
     commands
-        .spawn(SpriteBundle {
-            texture: textures.texture_bevy.clone(),
-            transform: Transform::from_translation(Vec3::new(0., 0., 1.)),
-            ..Default::default()
-        })
-        .insert(Player);
+        .spawn((
+            SpriteSheetBundle {
+                texture_atlas: player_walk.walking.clone(),
+                sprite,
+                ..default()
+            },
+            AnimationTimer {
+                timer: Timer::from_seconds(0.125, TimerMode::Repeating),
+                frame_count: 3,
+            },
+        ))
+        .insert(Player { alive: true });
 }
 
 fn move_player(
     time: Res<Time>,
     actions: Res<Actions>,
     mut player_query: Query<&mut Transform, With<Player>>,
+    mut state: ResMut<NextState<GameState>>,
 ) {
     if actions.player_movement.is_none() {
         return;
@@ -43,5 +81,50 @@ fn move_player(
     );
     for mut player_transform in &mut player_query {
         player_transform.translation += movement;
+
+        let x = player_transform.translation.x;
+        let y = player_transform.translation.y;
+
+        //check for wall collisions and thus death
+        console_log!("x: {} y: {}", x, y);
+
+        if x.abs() > 400. || y.abs() > 300. {
+            state.set(GameState::PlayingCutScene);
+            player_transform.translation = Vec3::ZERO;
+        }
+    }
+}
+
+fn update_player_animation(
+    mut sprites: Query<(&mut TextureAtlasSprite, &mut AnimationTimer, With<Player>)>,
+    time: Res<Time>,
+    actions: Res<Actions>,
+) {
+    for (mut sprite, mut animation_timer, _) in &mut sprites {
+        animation_timer.timer.tick(time.delta());
+
+        if actions.player_movement.is_none() {
+            return;
+        }
+
+        match actions.player_movement {
+            Some(vec2) if vec2.x > 0. => {
+                sprite.flip_x = false;
+            }
+            Some(vec2) if vec2.x < 0. => {
+                sprite.flip_x = true;
+            }
+            Some(_) | None => (),
+        }
+
+        if animation_timer.timer.just_finished() && actions.player_movement.is_some() {
+            sprite.index = (sprite.index + 1) % animation_timer.frame_count;
+        }
+    }
+}
+
+fn despawn_player(players: Query<(Entity, With<Player>)>, mut commands: Commands) {
+    for (player, _) in &players {
+        commands.entity(player).despawn();
     }
 }
