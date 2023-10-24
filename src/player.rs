@@ -1,6 +1,6 @@
 use crate::actions::Actions;
 use crate::loading::PlayerWalk;
-use crate::video;
+// use crate::video;
 use crate::GameState;
 use bevy::prelude::*;
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -23,7 +23,7 @@ pub struct PlayerPlugin;
 
 #[derive(Component)]
 pub struct Player {
-    alive: bool,
+    // alive: bool,
 }
 
 #[derive(Component)]
@@ -61,7 +61,7 @@ fn spawn_player(mut commands: Commands, player_walk: Res<PlayerWalk>) {
                 frame_count: 3,
             },
         ))
-        .insert(Player { alive: true });
+        .insert(Player {});
 }
 
 fn move_player(
