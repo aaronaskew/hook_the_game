@@ -15,7 +15,6 @@ pub enum VideoState {
     #[default]
     Ended,
 }
-#[cfg(debug_assertions)]
 #[derive(Default, Resource, Debug)]
 pub struct CutsceneVideo {
     pub src: String,
