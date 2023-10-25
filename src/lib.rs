@@ -7,7 +7,6 @@ mod utils;
 mod debug; // TODO make this dynamic based on build
 mod loading;
 mod menu;
-mod physics;
 mod player;
 mod video;
 
@@ -16,7 +15,6 @@ use crate::audio::InternalAudioPlugin;
 use crate::debug::DebugPlugin;
 use crate::loading::LoadingPlugin;
 use crate::menu::MenuPlugin;
-use crate::physics::PhysicsPlugin;
 use crate::player::PlayerPlugin;
 use crate::video::VideoPlugin;
 
@@ -37,8 +35,6 @@ enum GameState {
     Menu,
     // During this State the player is spawned
     SpawningPlayer,
-    // During this State the physics world is initialized
-    InitializingPhysics,
     // During this State the actual game logic is executed
     Playing,
     // Here the cutscene is played
@@ -63,7 +59,6 @@ impl Plugin for GamePlugin {
             InternalAudioPlugin,
             PlayerPlugin,
             VideoPlugin,
-            PhysicsPlugin,
             DebugPlugin,
         ));
 

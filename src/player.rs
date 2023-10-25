@@ -4,7 +4,6 @@ use crate::loading::PlayerWalk;
 use crate::GameState;
 use crate::*;
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
 
 pub struct PlayerPlugin;
 
@@ -52,7 +51,7 @@ pub fn spawn_player(
         .insert(Name::new("player"));
 
     // After spawning the player, we need to setup the physics
-    state.set(GameState::InitializingPhysics);
+    state.set(GameState::Playing);
 
     console_log!("spawn_player end");
 }
@@ -60,32 +59,23 @@ pub fn spawn_player(
 fn move_player(
     time: Res<Time>,
     actions: Res<Actions>,
-    mut player_query: Query<
-        (&mut Transform, &mut ExternalForce, &mut ExternalImpulse),
-        With<Player>,
-    >,
+    mut player_query: Query<(&mut Transform,), With<Player>>,
     mut state: ResMut<NextState<GameState>>,
 ) {
     if actions.player_movement.is_none() {
         return;
     }
 
-    let speed = 15.;
-    let movement = Vec2::new(
+    let speed = 150.;
+    let movement = Vec3::new(
         actions.player_movement.unwrap().x * speed * time.delta_seconds(),
         actions.player_movement.unwrap().y * speed * time.delta_seconds(),
+        0.0,
     );
 
-    for (mut player_transform, mut force, mut impulse) in player_query.iter_mut() {
-        
-        //force.force = movement;
-        impulse.impulse = movement;
-        
-        
-        
-        
-        
-        
+    for (mut player_transform,) in player_query.iter_mut() {
+        player_transform.translation += movement;
+
         //check for wall collisions and thus death
         if player_transform.translation.x.abs() > 400.
             || player_transform.translation.y.abs() > 300.

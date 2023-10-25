@@ -30,7 +30,6 @@ impl Default for ButtonColors {
 }
 
 fn setup_menu(mut commands: Commands, button_colors: Res<ButtonColors>) {
-
     commands
         .spawn(ButtonBundle {
             style: Style {
@@ -68,7 +67,7 @@ fn click_play_button(
     for (interaction, mut color) in &mut interaction_query {
         match *interaction {
             Interaction::Pressed => {
-                state.set(GameState::Playing);
+                state.set(GameState::SpawningPlayer);
             }
             Interaction::Hovered => {
                 *color = button_colors.hovered.into();
