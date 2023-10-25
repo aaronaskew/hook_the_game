@@ -44,8 +44,8 @@ pub fn spawn_player(mut commands: Commands, player_walk: Res<PlayerWalk>, mut st
                 frame_count: 3,
             },
         ))
-        .insert(Player {})
-        .insert(Name::new("player"));
+        .insert(Player {});
+        //.insert(Name::new("player"));
 
     // After spawning the player, we need to setup the physics
     state.set(GameState::InitializingPhysics);

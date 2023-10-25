@@ -15,7 +15,7 @@ pub enum VideoState {
     #[default]
     Ended,
 }
-
+#[cfg(debug_assertions)]
 #[derive(Default, Resource, Debug)]
 pub struct CutsceneVideo {
     pub src: String,
@@ -41,12 +41,7 @@ impl Plugin for VideoPlugin {
                 .after(play_video)
                 .run_if(in_state(GameState::PlayingCutScene)),
         )
-        .add_systems(OnExit(GameState::PlayingCutScene), cleanup_video)
-        // TODO Debug only
-        .add_systems(
-            Update,
-            debug_play_cutscene.run_if(in_state(GameState::Playing)),
-        );
+        .add_systems(OnExit(GameState::PlayingCutScene), cleanup_video);
     }
 }
 
@@ -139,13 +134,13 @@ fn resize_video(canvas: &HtmlCanvasElement, video: &HtmlVideoElement) {
         .set_property("height", &format!("{}px", rect.height()))
         .expect("to set height");
 
-    console_log!("resize!");
+    //console_log!("resize!");
 }
 
 pub fn play_video(video_resource: Res<CutsceneVideo>) {
     let video = get_html_video_element(&video_resource.element_id);
 
-    console_log!("{:#?}", video);
+    //console_log!("{:#?}", video);
 
     video.set_hidden(false);
     if let Some(error) = video.play().err() {
@@ -167,11 +162,11 @@ fn check_video(mut video_resource: ResMut<CutsceneVideo>, mut state: ResMut<Next
         state.set(CUTSCENE_NEXT_STATE);
     }
 
-    console_log!(
-        "video: {:#?}\nvideo_resource.is_playing: {:#?}",
-        video,
-        video_resource.is_playing
-    );
+    // console_log!(
+    //     "video: {:#?}\nvideo_resource.is_playing: {:#?}",
+    //     video,
+    //     video_resource.is_playing
+    // );
 }
 
 fn get_html_video_element(id: &str) -> HtmlVideoElement {
@@ -183,11 +178,4 @@ fn get_html_video_element(id: &str) -> HtmlVideoElement {
         .expect("can't get video element")
         .dyn_into()
         .expect("dyn into cast to video element")
-}
-
-/// TODO Debug only
-fn debug_play_cutscene(mut state: ResMut<NextState<GameState>>, actions: Res<Actions>) {
-    if actions.debug_play_cutscene {
-        state.set(GameState::PlayingCutScene);
-    }
 }

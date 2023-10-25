@@ -15,19 +15,17 @@ pub struct ActionsPlugin;
 // Actions can then be used as a resource in other systems to act on the player input.
 impl Plugin for ActionsPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<Actions>()
-            .add_systems(
-                Update,
-                set_movement_actions.run_if(in_state(GameState::Playing)),
-            )
-            .add_systems(Update, set_debug_actions);
+        app.init_resource::<Actions>().add_systems(
+            Update,
+            set_movement_actions.run_if(in_state(GameState::Playing)),
+        );
     }
 }
 
 #[derive(Default, Resource)]
 pub struct Actions {
     pub player_movement: Option<Vec2>,
-    pub debug_play_cutscene: bool,
+    pub jump: bool,
 }
 
 pub fn set_movement_actions(
@@ -60,12 +58,7 @@ pub fn set_movement_actions(
     } else {
         actions.player_movement = None;
     }
-}
 
-/// TODO Debug only
-pub fn set_debug_actions(mut actions: ResMut<Actions>, keyboard_input: Res<Input<KeyCode>>) {
-    actions.debug_play_cutscene = match keyboard_input.just_pressed(KeyCode::Space) {
-        true => true,
-        false => false,
-    }
+    // Check for jump input
+    actions.jump = keyboard_input.just_pressed(KeyCode::Space);
 }

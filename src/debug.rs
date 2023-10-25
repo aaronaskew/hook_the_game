@@ -1,35 +1,77 @@
 #![allow(unused)]
-/// Debugging tools
-use bevy::prelude::*;
+use crate::{player::Player, *};
+use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*, render::primitives::Aabb};
+use bevy_debug_text_overlay::{screen_print, OverlayPlugin};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_xpbd_2d::prelude::*;
 
-use crate::{loading::PlayerWalk, *};
-
+/// Debugging tools
 pub struct DebugPlugin;
 
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(WorldInspectorPlugin::new())
-            .add_systems(OnEnter(GameState::Playing), debug_update);
+        app.add_plugins((
+            // FrameTimeDiagnosticsPlugin,
+            // WorldInspectorPlugin::new(),
+            OverlayPlugin::default(),
+        ));
+        //.add_systems(Update, Self::show_state)
+        // .add_systems(
+        //     Update,
+        //     Self::player_info.run_if(in_state(GameState::Playing)),
+        // );
     }
 }
 
-fn debug_update(
-    mut commands: Commands,
-    _query: Query<(&Transform, Option<&Name>)>,
-    _state: Res<State<GameState>>,
-    _ortho: Query<&OrthographicProjection>,
-    player_walk: Res<PlayerWalk>,
-) {
+impl DebugPlugin {
+    fn player_info(
+        _query: Query<(&Transform, Option<&Name>)>,
+        _state: Res<State<GameState>>,
+        _ortho: Query<&OrthographicProjection>,
+        player_physics: Query<
+            (
+                &Aabb,
+                &Collider,
+                &ColliderAabb,
+                &Position,
+                &LinearVelocity,
+                &ExternalForce,
+                &CollidingEntities,
+            ),
+            With<Player>,
+        >,
+        time: Res<Time>,
+    ) {
+        let current_time = time.elapsed_seconds_f64();
+        let at_interval = |t: f64| current_time % t < time.delta_seconds_f64();
 
-    { // debug messages
-         // console_log!("debug_update start");
-         // console_log!("state: {:?}, got {} Transforms", state, query.iter().len());
+        if at_interval(0.01) {
+            player_physics.iter().for_each(
+                |(aabb, coll, coll_aabb, pos, vel, force, colliding_ents)| {
+                    // screen_print!(
+                    //     "player Aabb: {:#?}\nplayer Collider: {:#?}\nplayer AabbCollider: {:#?}n",
+                    //     aabb,
+                    //     coll,
+                    //     coll_aabb.0
+                    // );
+                    screen_print!(
+                        "pos {:?}\nvel {:?}\nforce {:?}\ncolliding entities {:#?}",
+                        pos,
+                        vel,
+                        force,
+                        colliding_ents
+                    );
+                },
+            );
+        }
+    }
 
-        // for (i, (t, n)) in query.iter().enumerate() {
-        //     console_log!("idx: {} name: {:?} transform: {:?}", i, n, t,);
-        // }
+    fn show_state(state: Res<State<GameState>>, time: Res<Time>) {
+        let current_time = time.elapsed_seconds_f64();
+        let at_interval = |t: f64| current_time % t < time.delta_seconds_f64();
 
-        // console_log!("debug_update end");
+        if at_interval(2.0) {
+            screen_print!("state: {:?}", state);
+        }
     }
 }

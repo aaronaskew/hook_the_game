@@ -1,14 +1,21 @@
-use crate::actions::Actions;
 use crate::loading::PlayerWalk;
+use crate::{actions::Actions, level::Ground, physics::*};
 // use crate::video;
 use crate::GameState;
 use crate::*;
 use bevy::prelude::*;
+use bevy_debug_text_overlay::screen_print;
+use bevy_xpbd_2d::prelude::{CollidingEntities, ExternalForce, LinearVelocity, RayHits, Position};
+
+const PLAYER_SIZE: Vec2 = Vec2 { x: 10.0, y: 32.0 };
 
 pub struct PlayerPlugin;
 
 #[derive(Component)]
-pub struct Player {}
+pub struct Player {
+    pub size: Vec2,
+    pub is_jumping: bool,
+}
 
 /// This plugin handles player related stuff like movement
 /// Player logic is only active during the State `GameState::Playing`
@@ -47,42 +54,57 @@ pub fn spawn_player(
                 frame_count: 3,
             },
         ))
-        .insert(Player {})
-        .insert(Name::new("player"));
+        .insert(Player {
+            size: PLAYER_SIZE,
+            is_jumping: false,
+        })
+        .insert(Name::new("player"))
+        .insert(physics::InitSpriteRigidBody::Dynamic);
 
     // After spawning the player, we need to setup the physics
-    state.set(GameState::Playing);
+    state.set(GameState::InitializingPhysics);
 
     console_log!("spawn_player end");
 }
 
 fn move_player(
-    time: Res<Time>,
     actions: Res<Actions>,
-    mut player_query: Query<(&mut Transform,), With<Player>>,
+    physics_constants: Res<PhysicsConstants>,
     mut state: ResMut<NextState<GameState>>,
+    mut player_velocity: Query<(&mut LinearVelocity, &mut Player, &Position)>,
+    player_collisions_query: Query<(&RayHits, &CollidingEntities), With<Player>>,
+    grounds_query: Query<Entity, With<Ground>>,
 ) {
-    if actions.player_movement.is_none() {
-        return;
+    let (mut velocity, mut player, position) = player_velocity.single_mut();
+
+    // handle moving
+    if actions.player_movement.is_some() {
+        let movement = Vec2::new(
+            actions.player_movement.unwrap().x * physics_constants.walk_speed, // * time.delta_seconds(),
+            actions.player_movement.unwrap().y * physics_constants.walk_speed, // * time.delta_seconds(),
+        );
+
+        velocity.x = movement.x;
     }
 
-    let speed = 150.;
-    let movement = Vec3::new(
-        actions.player_movement.unwrap().x * speed * time.delta_seconds(),
-        actions.player_movement.unwrap().y * speed * time.delta_seconds(),
-        0.0,
-    );
-
-    for (mut player_transform,) in player_query.iter_mut() {
-        player_transform.translation += movement;
-
-        //check for wall collisions and thus death
-        if player_transform.translation.x.abs() > 400.
-            || player_transform.translation.y.abs() > 300.
-        {
-            state.set(GameState::PlayingCutScene);
-            player_transform.translation = Vec3::ZERO;
+    // handle jumping
+    let is_grounded = physics::check_if_grounded(&player_collisions_query, &grounds_query);
+    if player.is_jumping {
+        if is_grounded {
+            player.is_jumping = false;
         }
+    } else if actions.jump && is_grounded {
+        player.is_jumping = true;
+        velocity.y = physics_constants.jump_speed;
+    }
+
+    // screen_print!("is_grounded: {}", is_grounded);
+    // screen_print!("is_jumping: {}", player.is_jumping);
+    // screen_print!("is_grounded: {}", is_grounded);
+
+    //check for wall collisions and thus death
+    if position.x.abs() > 400. || position.y.abs() > 300. {
+        state.set(GameState::PlayingCutScene);
     }
 }
 
