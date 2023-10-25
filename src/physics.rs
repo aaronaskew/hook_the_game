@@ -1,5 +1,5 @@
 use bevy::{prelude::*, render::primitives::Aabb};
-use bevy_rapier2d::prelude::*;
+use bevy_rapier2d::{prelude::*, rapier::prelude::RigidBodyBuilder};
 
 use crate::{player::*, GameState};
 
@@ -40,13 +40,22 @@ pub fn setup_physics(
         .insert(TransformBundle::from(Transform::from_xyz(0.0, 400.0, 0.0)));
 
     // Setup Player Physics
-
-    
     let (entity, aabb) = query.single();
     commands
         .entity(entity)
         .insert(RigidBody::Dynamic)
-        .insert(Collider::cuboid(aabb.half_extents.x, aabb.half_extents.y));
+        .insert(LockedAxes::ROTATION_LOCKED)
+        .insert(ExternalForce::default())
+        .insert(ExternalImpulse::default())
+        .insert(Collider::cuboid(
+            aabb.half_extents.x * 0.3,
+            aabb.half_extents.y,
+        ))
+        .insert(GravityScale(1.0))
+        .insert(Damping {
+            linear_damping: 5.0,
+            angular_damping: 0.0,
+        });
 
     // let (entity, aabb) = player.single();
     // commands

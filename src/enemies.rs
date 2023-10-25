@@ -2,14 +2,14 @@ use crate::actions::Actions;
 use crate::loading::PlayerWalk;
 // use crate::video;
 use crate::GameState;
-use crate::*;
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
 
-pub struct PlayerPlugin;
+pub struct EnemiesPlugin;
 
 #[derive(Component)]
-pub struct Player {}
+pub struct Enemy {}
+
+
 
 /// This plugin handles player related stuff like movement
 /// Player logic is only active during the State `GameState::Playing`
@@ -24,11 +24,7 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-pub fn spawn_player(
-    mut commands: Commands,
-    player_walk: Res<PlayerWalk>,
-    mut state: ResMut<NextState<GameState>>,
-) {
+pub fn spawn_player(mut commands: Commands, player_walk: Res<PlayerWalk>, mut state :ResMut<NextState<GameState>>) {
     console_log!("spawn_player start");
 
     let sprite = TextureAtlasSprite {
@@ -53,43 +49,35 @@ pub fn spawn_player(
 
     // After spawning the player, we need to setup the physics
     state.set(GameState::InitializingPhysics);
-
+    
     console_log!("spawn_player end");
 }
 
 fn move_player(
     time: Res<Time>,
     actions: Res<Actions>,
-    mut player_query: Query<
-        (&mut Transform, &mut ExternalForce, &mut ExternalImpulse),
-        With<Player>,
-    >,
+    mut player_query: Query<&mut Transform, With<Player>>,
     mut state: ResMut<NextState<GameState>>,
 ) {
     if actions.player_movement.is_none() {
         return;
     }
-
-    let speed = 15.;
-    let movement = Vec2::new(
+    let speed = 150.;
+    let movement = Vec3::new(
         actions.player_movement.unwrap().x * speed * time.delta_seconds(),
         actions.player_movement.unwrap().y * speed * time.delta_seconds(),
+        0.,
     );
+    for mut player_transform in &mut player_query {
+        player_transform.translation += movement;
 
-    for (mut player_transform, mut force, mut impulse) in player_query.iter_mut() {
-        
-        //force.force = movement;
-        impulse.impulse = movement;
-        
-        
-        
-        
-        
-        
+        let x = player_transform.translation.x;
+        let y = player_transform.translation.y;
+
         //check for wall collisions and thus death
-        if player_transform.translation.x.abs() > 400.
-            || player_transform.translation.y.abs() > 300.
-        {
+        console_log!("x: {} y: {}", x, y);
+
+        if x.abs() > 400. || y.abs() > 300. {
             state.set(GameState::PlayingCutScene);
             player_transform.translation = Vec3::ZERO;
         }

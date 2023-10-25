@@ -45,6 +45,13 @@ enum GameState {
     PlayingCutScene,
 }
 
+
+#[derive(Component)]
+pub struct AnimationTimer {
+    pub timer: Timer,
+    pub frame_count: usize,
+}
+
 pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
