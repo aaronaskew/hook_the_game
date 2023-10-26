@@ -2,7 +2,7 @@ use crate::GameState;
 use bevy::prelude::*;
 use bevy_asset_loader::asset_collection::AssetCollection;
 use bevy_asset_loader::prelude::*;
-use bevy_ecs_ldtk::{LdtkAsset, LdtkLevel};
+use bevy_ecs_ldtk::LdtkAsset;
 use bevy_kira_audio::AudioSource;
 
 pub struct LoadingPlugin;
@@ -17,8 +17,7 @@ impl Plugin for LoadingPlugin {
         )
         .add_collection_to_loading_state::<_, AudioAssets>(GameState::Loading)
         .add_collection_to_loading_state::<_, PlayerWalkTextureAtlasAsset>(GameState::Loading)
-        .add_collection_to_loading_state::<_, LevelAsset>(GameState::Loading)
-        .add_systems(OnExit(GameState::Loading), spawn_camera);
+        .add_collection_to_loading_state::<_, LevelAsset>(GameState::Loading);
     }
 }
 
@@ -42,8 +41,4 @@ pub struct PlayerWalkTextureAtlasAsset {
 pub struct LevelAsset {
     #[asset(path = "sprites/level.ldtk")]
     pub level: Handle<LdtkAsset>,
-}
-
-fn spawn_camera(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
 }

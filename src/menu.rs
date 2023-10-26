@@ -1,6 +1,5 @@
 use crate::GameState;
 use bevy::prelude::*;
-use bevy_debug_text_overlay::screen_print;
 
 pub struct MenuPlugin;
 

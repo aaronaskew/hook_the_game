@@ -1,12 +1,12 @@
+use crate::{level::Ground, player::Player, GameState};
 use bevy::{prelude::*, render::primitives::Aabb};
+//use bevy_debug_text_overlay::screen_print;
 use bevy_inspector_egui::{prelude::ReflectInspectorOptions, InspectorOptions};
 use bevy_xpbd_2d::prelude::*;
 
-use crate::{level::Ground, player::Player, GameState};
+pub const NEXT_STATE: GameState = GameState::Playing;
 
-// character is 32px tall
-// assume 2m in height
-// 1m = 16px
+// character is 32px tall, assume 2m in height, 1m = 16px
 pub const GRAVITY: f32 = 9.8 * 16.0;
 pub const WALK_SPEED: f32 = 150.;
 pub const JUMP_SPEED: f32 = 500.;
@@ -34,10 +34,21 @@ pub struct PhysicsPlugin;
 /// Player logic is only active during the State `GameState::Playing`
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(PhysicsPlugins::default())
+        app.add_plugins(bevy_xpbd_2d::prelude::PhysicsPlugins::default())
             .insert_resource(Gravity(Vec2::NEG_Y * GRAVITY))
             .add_systems(OnEnter(GameState::InitializingPhysics), init_sprite_physics)
-            .add_systems(OnEnter(GameState::Playing), debug_ground)
+            .add_systems(
+                Update,
+                next_state_after_physics_settle
+                    .run_if(in_state(GameState::InitializingPhysics))
+                    .after(init_sprite_physics),
+            )
+            .add_systems(
+                OnEnter(GameState::InitializingPhysics),
+                debug_ground
+                    .after(init_sprite_physics)
+                    .before(next_state_after_physics_settle),
+            )
             .insert_resource(PhysicsConstants {
                 walk_speed: WALK_SPEED,
                 jump_speed: JUMP_SPEED,
@@ -55,7 +66,6 @@ pub fn init_sprite_physics(
     mut commands: Commands,
     query: Query<(Entity, &Aabb, &InitSpriteRigidBody), Without<Player>>,
     player: Query<(Entity, &InitSpriteRigidBody, &Player)>,
-    mut state: ResMut<NextState<GameState>>,
 ) {
     // set up player entities using the player.size for the collider
     for (e, srb, player) in player.iter() {
@@ -67,7 +77,7 @@ pub fn init_sprite_physics(
                     InitSpriteRigidBody::Kinematic => RigidBody::Kinematic,
                     InitSpriteRigidBody::Static => RigidBody::Static,
                 },
-                Collider::cuboid(player.size.x, player.size.y),
+                Collider::cuboid(player.collider_size.x, player.collider_size.y),
                 LockedAxes::ROTATION_LOCKED,
                 Restitution::ZERO.with_combine_rule(CoefficientCombine::Min),
                 ExternalForce::ZERO,
@@ -104,8 +114,6 @@ pub fn init_sprite_physics(
             ))
             .remove::<InitSpriteRigidBody>();
     }
-
-    state.set(GameState::Playing);
 }
 
 pub fn check_if_grounded(
@@ -136,14 +144,25 @@ pub fn check_if_grounded(
     false
 }
 
+/// Waits until all RigidBodies are sleeping before transitioning to the next state
+pub fn next_state_after_physics_settle(
+    mut state: ResMut<NextState<GameState>>,
+    not_sleeping_q: Query<Entity, (With<RigidBody>, With<Sleeping>)>,
+) {
+    if not_sleeping_q.iter().len() == 0 {
+        state.set(NEXT_STATE);
+    }
+}
+
 // TODO testing physics
 
 pub fn debug_ground(mut commands: Commands) {
+    //screen_print!("debug_ground()");
     commands.spawn((
         RigidBody::Static,
         Collider::cuboid(700.0, 10.),
-        //Name::new("ground"),
-        Position(Vec2::NEG_Y * 295.0),
+        Name::new("ground"),
+        Position(Vec2::ZERO),
         Ground,
     ));
 }

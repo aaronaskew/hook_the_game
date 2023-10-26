@@ -1,9 +1,6 @@
-use crate::{
-    loading::{self, LevelAsset},
-    GameState,
-};
+use crate::{loading::LevelAsset, GameState};
 use bevy::prelude::*;
-use bevy_debug_text_overlay::screen_print;
+//use bevy_debug_text_overlay::screen_print;
 use bevy_ecs_ldtk::prelude::*;
 
 #[derive(Component)]
@@ -20,26 +17,12 @@ impl Plugin for LevelPlugin {
 }
 
 fn setup(mut commands: Commands, level: Res<LevelAsset>, mut state: ResMut<NextState<GameState>>) {
-    screen_print!("level setup");
-
-    //let Some(ldtk_handle) = level;
+    //screen_print!("level setup");
 
     commands.spawn((
         LdtkWorldBundle {
             ldtk_handle: level.level.clone(),
-            transform: Transform {
-                translation: Vec3 {
-                    x: -400.,
-                    y: -300.,
-                    z: 0.0,
-                },
-                scale: Vec3 {
-                    x: 2.,
-                    y: 2.,
-                    z: 2.,
-                },
-                ..default()
-            },
+
             ..default()
         },
         Name::new("level"),

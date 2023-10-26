@@ -15,11 +15,11 @@ impl Plugin for DebugPlugin {
             WorldInspectorPlugin::new(),
             OverlayPlugin::default(),
         ))
-        .add_systems(Update, Self::show_state);
-        // .add_systems(
-        //     Update,
-        //     Self::player_info.run_if(in_state(GameState::Playing)),
-        // );
+        .add_systems(Update, Self::show_state)
+        .add_systems(
+            Update,
+            Self::player_info.run_if(in_state(GameState::Playing)),
+        );
     }
 }
 
@@ -48,19 +48,8 @@ impl DebugPlugin {
         if at_interval(0.01) {
             player_physics.iter().for_each(
                 |(aabb, coll, coll_aabb, pos, vel, force, colliding_ents)| {
-                    // screen_print!(
-                    //     "player Aabb: {:#?}\nplayer Collider: {:#?}\nplayer AabbCollider: {:#?}n",
-                    //     aabb,
-                    //     coll,
-                    //     coll_aabb.0
-                    // );
-                    screen_print!(
-                        "pos {:?}\nvel {:?}\nforce {:?}\ncolliding entities {:#?}",
-                        pos,
-                        vel,
-                        force,
-                        colliding_ents
-                    );
+                    //screen_print!("cam scale {:?}", _ortho.single().scale);
+                    //screen_print!("pos {:?}", pos);
                 },
             );
         }
@@ -71,7 +60,7 @@ impl DebugPlugin {
         let at_interval = |t: f64| current_time % t < time.delta_seconds_f64();
 
         if at_interval(2.0) {
-            screen_print!("state: {:?}", state);
+            //screen_print!("state: {:?}", state);
         }
     }
 }

@@ -3,17 +3,23 @@ use crate::{actions::Actions, level::Ground, physics::*};
 // use crate::video;
 use crate::GameState;
 use crate::*;
-use bevy::prelude::*;
+//use bevy::prelude::*;
 use bevy_xpbd_2d::prelude::{CollidingEntities, LinearVelocity, Position, RayHits};
 
-const PLAYER_SIZE: Vec2 = Vec2 { x: 10.0, y: 32.0 };
+const PLAYER_COLLISION_SIZE: Vec2 = Vec2 { x: 10.0, y: 32.0 };
+const PLAYER_SPAWN_POSITION: Vec3 = Vec3 {
+    x: 10.0,
+    y: 10.0,
+    z: 10.0,
+};
 
 pub struct PlayerPlugin;
 
 #[derive(Component)]
 pub struct Player {
-    pub size: Vec2,
+    pub collider_size: Vec2,
     pub is_jumping: bool,
+    pub is_alive: bool,
 }
 
 /// This plugin handles player related stuff like movement
@@ -24,7 +30,8 @@ impl Plugin for PlayerPlugin {
             .add_systems(OnExit(GameState::Playing), despawn_player)
             .add_systems(
                 Update,
-                (move_player, update_player_animation).run_if(in_state(GameState::Playing)),
+                (move_player, update_player_animation, death_check)
+                    .run_if(in_state(GameState::Playing)),
             );
     }
 }
@@ -37,7 +44,7 @@ pub fn spawn_player(
     console_log!("spawn_player start");
 
     let sprite = TextureAtlasSprite {
-        //custom_size: Some(Vec2::splat(140.)),
+        //custom_size: Some(Vec2::splat(32.0)),
         ..default()
     };
 
@@ -46,13 +53,9 @@ pub fn spawn_player(
             SpriteSheetBundle {
                 texture_atlas: player_walk.walking.clone(),
                 sprite,
-                transform: Transform {
-                    translation: Vec3 {
-                        z: 10.,
-                        ..default()
-                    },
-                    ..default()
-                },
+                transform: Transform::default()
+                    // .with_scale(Vec3::splat(PLAYER_SCALE))
+                    .with_translation(PLAYER_SPAWN_POSITION),
                 ..default()
             },
             AnimationTimer {
@@ -61,8 +64,9 @@ pub fn spawn_player(
             },
         ))
         .insert(Player {
-            size: PLAYER_SIZE,
+            collider_size: PLAYER_COLLISION_SIZE,
             is_jumping: false,
+            is_alive: true,
         })
         .insert(Name::new("player"))
         .insert(physics::InitSpriteRigidBody::Dynamic);
@@ -145,5 +149,11 @@ fn update_player_animation(
 fn despawn_player(players: Query<(Entity, With<Player>)>, mut commands: Commands) {
     for (player, _) in &players {
         commands.entity(player).despawn();
+    }
+}
+
+fn death_check(player: Query<&Player>, mut state: ResMut<NextState<GameState>>) {
+    if !player.single().is_alive {
+        state.set(GameState::PlayingCutScene);
     }
 }
