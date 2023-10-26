@@ -1,5 +1,4 @@
 use bevy::{prelude::*, render::primitives::Aabb};
-use bevy_debug_text_overlay::screen_print;
 use bevy_inspector_egui::{prelude::ReflectInspectorOptions, InspectorOptions};
 use bevy_xpbd_2d::prelude::*;
 
@@ -144,7 +143,7 @@ pub fn debug_ground(mut commands: Commands) {
         RigidBody::Static,
         Collider::cuboid(700.0, 10.),
         //Name::new("ground"),
-        Position(Vec2::NEG_Y * 250.0),
+        Position(Vec2::NEG_Y * 295.0),
         Ground,
     ));
 }

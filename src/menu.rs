@@ -1,5 +1,6 @@
 use crate::GameState;
 use bevy::prelude::*;
+use bevy_debug_text_overlay::screen_print;
 
 pub struct MenuPlugin;
 
@@ -31,18 +32,21 @@ impl Default for ButtonColors {
 
 fn setup_menu(mut commands: Commands, button_colors: Res<ButtonColors>) {
     commands
-        .spawn(ButtonBundle {
-            style: Style {
-                width: Val::Px(120.0),
-                height: Val::Px(50.0),
-                margin: UiRect::all(Val::Auto),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                ..default()
+        .spawn((
+            ButtonBundle {
+                style: Style {
+                    width: Val::Px(120.0),
+                    height: Val::Px(50.0),
+                    margin: UiRect::all(Val::Auto),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    ..default()
+                },
+                background_color: button_colors.normal.into(),
+                ..Default::default()
             },
-            background_color: button_colors.normal.into(),
-            ..Default::default()
-        })
+            Name::new("button"),
+        ))
         .with_children(|parent| {
             parent.spawn(TextBundle::from_section(
                 "Play",
@@ -60,19 +64,18 @@ fn click_play_button(
     mut state: ResMut<NextState<GameState>>,
     mut interaction_query: Query<
         (&Interaction, &mut BackgroundColor),
-        (Changed<Interaction>, With<Button>),
+        (Changed<Interaction>, With<Button>, With<Children>),
     >,
-    mut text: Query<&mut Text>,
+    mut text: Query<&mut Text, With<Parent>>,
 ) {
     for (interaction, mut color) in &mut interaction_query {
         match *interaction {
             Interaction::Pressed => {
-                state.set(GameState::SpawningPlayer);
+                state.set(GameState::BuildingLevel);
             }
             Interaction::Hovered => {
                 *color = button_colors.hovered.into();
                 text.single_mut().sections[0].value = "yalP".to_string();
-                eprintln!("Hovered");
             }
             Interaction::None => {
                 *color = button_colors.normal.into();

@@ -1,4 +1,4 @@
-use crate::{actions::Actions, GameState};
+use crate::GameState;
 use bevy::prelude::*;
 use wasm_bindgen::prelude::*;
 use web_sys::{window, HtmlCanvasElement, HtmlVideoElement};

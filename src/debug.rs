@@ -12,10 +12,10 @@ impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             // FrameTimeDiagnosticsPlugin,
-            // WorldInspectorPlugin::new(),
+            WorldInspectorPlugin::new(),
             OverlayPlugin::default(),
-        ));
-        //.add_systems(Update, Self::show_state)
+        ))
+        .add_systems(Update, Self::show_state);
         // .add_systems(
         //     Update,
         //     Self::player_info.run_if(in_state(GameState::Playing)),

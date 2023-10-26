@@ -1,11 +1,10 @@
-use crate::loading::PlayerWalk;
+use crate::loading::PlayerWalkTextureAtlasAsset;
 use crate::{actions::Actions, level::Ground, physics::*};
 // use crate::video;
 use crate::GameState;
 use crate::*;
 use bevy::prelude::*;
-use bevy_debug_text_overlay::screen_print;
-use bevy_xpbd_2d::prelude::{CollidingEntities, ExternalForce, LinearVelocity, RayHits, Position};
+use bevy_xpbd_2d::prelude::{CollidingEntities, LinearVelocity, Position, RayHits};
 
 const PLAYER_SIZE: Vec2 = Vec2 { x: 10.0, y: 32.0 };
 
@@ -32,7 +31,7 @@ impl Plugin for PlayerPlugin {
 
 pub fn spawn_player(
     mut commands: Commands,
-    player_walk: Res<PlayerWalk>,
+    player_walk: Res<PlayerWalkTextureAtlasAsset>,
     mut state: ResMut<NextState<GameState>>,
 ) {
     console_log!("spawn_player start");
@@ -47,6 +46,13 @@ pub fn spawn_player(
             SpriteSheetBundle {
                 texture_atlas: player_walk.walking.clone(),
                 sprite,
+                transform: Transform {
+                    translation: Vec3 {
+                        z: 10.,
+                        ..default()
+                    },
+                    ..default()
+                },
                 ..default()
             },
             AnimationTimer {

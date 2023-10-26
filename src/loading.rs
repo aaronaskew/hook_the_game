@@ -2,6 +2,7 @@ use crate::GameState;
 use bevy::prelude::*;
 use bevy_asset_loader::asset_collection::AssetCollection;
 use bevy_asset_loader::prelude::*;
+use bevy_ecs_ldtk::{LdtkAsset, LdtkLevel};
 use bevy_kira_audio::AudioSource;
 
 pub struct LoadingPlugin;
@@ -12,11 +13,11 @@ pub struct LoadingPlugin;
 impl Plugin for LoadingPlugin {
     fn build(&self, app: &mut App) {
         app.add_loading_state(
-            // TODO skipping menu for now
-            LoadingState::new(GameState::Loading).continue_to_state(GameState::SpawningPlayer),
+            LoadingState::new(GameState::Loading).continue_to_state(GameState::Menu),
         )
         .add_collection_to_loading_state::<_, AudioAssets>(GameState::Loading)
-        .add_collection_to_loading_state::<_, PlayerWalk>(GameState::Loading)
+        .add_collection_to_loading_state::<_, PlayerWalkTextureAtlasAsset>(GameState::Loading)
+        .add_collection_to_loading_state::<_, LevelAsset>(GameState::Loading)
         .add_systems(OnExit(GameState::Loading), spawn_camera);
     }
 }
@@ -30,18 +31,17 @@ pub struct AudioAssets {
     pub flying: Handle<AudioSource>,
 }
 
-// #[derive(AssetCollection, Resource)]
-// pub struct TextureAssets {
-//     #[asset(path = "textures/bevy.png")]
-//     pub texture_bevy: Handle<Image>,
-
-// }
-
 #[derive(AssetCollection, Resource)]
-pub struct PlayerWalk {
+pub struct PlayerWalkTextureAtlasAsset {
     #[asset(texture_atlas(tile_size_x = 32., tile_size_y = 32., columns = 3, rows = 1))]
     #[asset(path = "sprites/hook_sheet.png")]
     pub walking: Handle<TextureAtlas>,
+}
+
+#[derive(AssetCollection, Resource)]
+pub struct LevelAsset {
+    #[asset(path = "sprites/level.ldtk")]
+    pub level: Handle<LdtkAsset>,
 }
 
 fn spawn_camera(mut commands: Commands) {

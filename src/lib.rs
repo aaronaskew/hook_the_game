@@ -4,9 +4,8 @@ mod actions;
 mod audio;
 #[macro_use]
 mod utils;
-mod debug;
+mod debug; //TODO make this dynamic based on build
 mod level;
-///TODO make this dynamic based on build
 mod loading;
 mod menu;
 mod physics;
@@ -16,6 +15,7 @@ mod video;
 use crate::actions::ActionsPlugin;
 use crate::audio::InternalAudioPlugin;
 use crate::debug::DebugPlugin;
+use crate::level::LevelPlugin;
 use crate::loading::LoadingPlugin;
 use crate::menu::MenuPlugin;
 use crate::physics::PhysicsPlugin;
@@ -87,6 +87,7 @@ impl Plugin for GamePlugin {
             PlayerPlugin,
             VideoPlugin,
             PhysicsPlugin,
+            LevelPlugin,
         ));
 
         #[cfg(debug_assertions)]
