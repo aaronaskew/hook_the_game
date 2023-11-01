@@ -5,6 +5,8 @@ use bevy_debug_text_overlay::{screen_print, OverlayPlugin};
 use bevy_inspector_egui::{quick::WorldInspectorPlugin, DefaultInspectorConfigPlugin};
 use bevy_xpbd_2d::prelude::*;
 
+mod editor;
+
 /// Debugging tools
 pub struct DebugPlugin;
 
@@ -12,7 +14,8 @@ impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             // FrameTimeDiagnosticsPlugin,
-            WorldInspectorPlugin::new(),
+            // WorldInspectorPlugin::new(),
+            editor::HookEditorPlugin,
             OverlayPlugin::default(),
         ))
         .add_systems(Update, Self::show_state)

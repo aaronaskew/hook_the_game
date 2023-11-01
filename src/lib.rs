@@ -124,12 +124,15 @@ impl Plugin for GamePlugin {
     }
 }
 
+#[derive(Component)]
+struct MainCamera;
+
 fn spawn_camera_and_next_state(mut commands: Commands, mut state: ResMut<NextState<GameState>>) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2dBundle::default()).insert(MainCamera);
     state.set(GameState::Loading);
 }
 
-fn scale_camera_projection(mut q: Query<&mut OrthographicProjection>) {
+fn scale_camera_projection(mut q: Query<&mut OrthographicProjection, With<MainCamera>>) {
     let mut projection = q.single_mut();
 
     // scale camera
@@ -137,7 +140,7 @@ fn scale_camera_projection(mut q: Query<&mut OrthographicProjection>) {
     projection.scale = projection.scale.clamp(0.25, 5.0);
 }
 
-fn recenter_camera(mut transform_q: Query<&mut Transform>) {
+fn recenter_camera(mut transform_q: Query<&mut Transform, With<MainCamera>>) {
     let mut transform = transform_q.single_mut();
 
     let scaled_camera_transform = GAME_SIZE * CAMERA_ZOOM / 2.0;
