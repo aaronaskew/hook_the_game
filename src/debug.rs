@@ -2,7 +2,7 @@
 use crate::{player::Player, *};
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*, render::primitives::Aabb};
 use bevy_debug_text_overlay::{screen_print, OverlayPlugin};
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_inspector_egui::{quick::WorldInspectorPlugin, DefaultInspectorConfigPlugin};
 use bevy_xpbd_2d::prelude::*;
 
 /// Debugging tools
