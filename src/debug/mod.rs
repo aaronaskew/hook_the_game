@@ -1,8 +1,9 @@
 #![allow(unused)]
-use crate::{player::Player, *};
+use crate::{audio::MainMusicLoop, player::Player, *};
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*, render::primitives::Aabb};
 use bevy_debug_text_overlay::{screen_print, OverlayPlugin};
 use bevy_inspector_egui::{quick::WorldInspectorPlugin, DefaultInspectorConfigPlugin};
+use bevy_kira_audio::{AudioInstance, AudioTween, PlaybackState};
 use bevy_xpbd_2d::prelude::*;
 
 mod editor;
@@ -21,7 +22,10 @@ impl Plugin for DebugPlugin {
         .add_systems(Update, Self::show_state)
         .add_systems(
             Update,
-            Self::player_info.run_if(in_state(GameState::Playing)),
+            (
+                Self::player_info.run_if(in_state(GameState::Playing)),
+                Self::debug_input.run_if(in_state(GameState::Playing)),
+            ),
         );
     }
 }
@@ -66,4 +70,40 @@ impl DebugPlugin {
             //screen_print!("state: {:?}", state);
         }
     }
+
+    fn debug_input(
+        keyboard_input: Res<Input<KeyCode>>,
+        music: Res<MainMusicLoop>,
+        mut audio_instances: ResMut<Assets<AudioInstance>>,
+    ) {
+        // able to stop music with `Q`
+        if keyboard_input.just_pressed(KeyCode::Q) {
+            //toggle music
+
+            if let Some(instance) = audio_instances.get_mut(&music.0) {
+                match instance.state() {
+                    PlaybackState::Paused { .. } => {
+                        instance.resume(AudioTween::default());
+                    }
+                    PlaybackState::Playing { .. } => {
+                        instance.pause(AudioTween::default());
+                    }
+                    _ => (),
+                }
+            }
+        }
+    }
+
+    // fn control_flying_sound(
+    //     actions: Res<Actions>,
+    //     audio: Res<FlyingAudio>,
+    //     mut audio_instances: ResMut<Assets<AudioInstance>>,
+    // ) {
+    //     if let Some(instance) = audio_instances.get_mut(&audio.0) {
+    //         match instance.state() {
+    //             PlaybackState::Paused { .. } => {
+    //                 if actions.player_movement.is_some() {
+    //                     instance.resume(AudioTween::default());
+    //                 }
+    //             }
 }

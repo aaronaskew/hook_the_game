@@ -22,7 +22,7 @@ impl Plugin for InternalAudioPlugin {
 
 #[derive(Resource)]
 // struct FlyingAudio(Handle<AudioInstance>);
-struct MainMusicLoop(Handle<AudioInstance>);
+pub struct MainMusicLoop(pub Handle<AudioInstance>);
 
 fn start_audio(mut commands: Commands, audio_assets: Res<AudioAssets>, audio: Res<Audio>) {
     //audio.pause();
@@ -34,10 +34,7 @@ fn start_audio(mut commands: Commands, audio_assets: Res<AudioAssets>, audio: Re
     commands.insert_resource(MainMusicLoop(handle));
 }
 
-fn stop_music(
-    audio: Res<MainMusicLoop>,
-    mut audio_instances: ResMut<Assets<AudioInstance>>,
-) {
+fn stop_music(audio: Res<MainMusicLoop>, mut audio_instances: ResMut<Assets<AudioInstance>>) {
     if let Some(instance) = audio_instances.get_mut(&audio.0) {
         instance.pause(AudioTween::default());
     }
