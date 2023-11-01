@@ -6,16 +6,19 @@ mod actions;
 mod audio;
 #[macro_use]
 mod utils;
+mod background;
 mod debug; //TODO make this dynamic based on build
 mod level;
 mod loading;
 mod menu;
 mod physics;
 mod player;
+mod shader_utils;
 mod video;
 
 use crate::actions::ActionsPlugin;
 use crate::audio::InternalAudioPlugin;
+use crate::background::BackgroundPlugin;
 use crate::debug::DebugPlugin;
 use crate::level::LevelPlugin;
 use crate::loading::LoadingPlugin;
@@ -107,6 +110,7 @@ impl Plugin for GamePlugin {
                 VideoPlugin,
                 PhysicsPlugin,
                 LevelPlugin,
+                BackgroundPlugin,
             ))
             .add_systems(
                 OnEnter(GameState::Initializing),
