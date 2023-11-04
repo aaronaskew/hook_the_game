@@ -70,7 +70,7 @@ fn click_play_button(
     for (interaction, mut color) in &mut interaction_query {
         match *interaction {
             Interaction::Pressed => {
-                state.set(GameState::BuildingLevel);
+                state.set(GameState::LoadingLevel);
             }
             Interaction::Hovered => {
                 *color = button_colors.hovered.into();

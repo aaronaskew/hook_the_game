@@ -4,58 +4,73 @@ use crate::{actions::Actions, level::Ground, physics::*};
 use crate::GameState;
 use crate::*;
 //use bevy::prelude::*;
+use bevy_ecs_ldtk::prelude::*;
 use bevy_xpbd_2d::prelude::{CollidingEntities, LinearVelocity, Position, RayHits};
 
 const PLAYER_COLLISION_SIZE: Vec2 = Vec2 { x: 10.0, y: 32.0 };
-const PLAYER_SPAWN_POSITION: Vec3 = Vec3 {
-    x: 10.0,
-    y: 10.0,
-    z: 10.0,
-};
 
 pub struct PlayerPlugin;
+impl Plugin for PlayerPlugin {
+    fn build(&self, app: &mut App) {
+        app
+            // register the Player type to see the details in the egui inspector
+            .register_type::<Player>()
+            // register the PlayerLdtkBundle in order to spawn the player entity via
+            // the ldtk level
+            .register_ldtk_entity::<PlayerLdtkBundle>("Player")
+            .add_systems(OnEnter(GameState::SpawningPlayer), initialize_player)
+            .add_systems(
+                Update,
+                (move_player, update_player_animation, death_check)
+                    .run_if(in_state(GameState::Playing)),
+            )
+            .add_systems(OnExit(GameState::Playing), despawn_player);
+    }
+}
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
 pub struct Player {
     pub collider_size: Vec2,
     pub is_jumping: bool,
     pub is_alive: bool,
 }
 
-/// This plugin handles player related stuff like movement
-/// Player logic is only active during the State `GameState::Playing`
-impl Plugin for PlayerPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::SpawningPlayer), spawn_player)
-            .add_systems(OnExit(GameState::Playing), despawn_player)
-            .add_systems(
-                Update,
-                (move_player, update_player_animation, death_check)
-                    .run_if(in_state(GameState::Playing)),
-            );
+// implement default()
+impl Default for Player {
+    fn default() -> Self {
+        Player {
+            collider_size: PLAYER_COLLISION_SIZE,
+            is_jumping: false,
+            is_alive: true,
+        }
     }
 }
 
-pub fn spawn_player(
+/// this is the bundle that will be instanced when the player entity is loaded from
+/// the ldtk level. further initialization will be done by the system `initialize_player`
+#[derive(Default, Bundle, LdtkEntity)]
+pub struct PlayerLdtkBundle {
+    player: Player,
+}
+
+/// This is the system that will be called after the player is
+/// instanced from the ldtk level. The majority of the initialization
+/// takes place here.
+fn initialize_player(
     mut commands: Commands,
+    query: Query<(Entity, &Transform), With<Player>>,
     player_walk: Res<PlayerWalkTextureAtlasAsset>,
     mut state: ResMut<NextState<GameState>>,
 ) {
-    console_log!("spawn_player start");
-
-    let sprite = TextureAtlasSprite {
-        //custom_size: Some(Vec2::splat(32.0)),
-        ..default()
-    };
+    let (entity, transform) = query.single();
 
     commands
-        .spawn((
+        .entity(entity)
+        .insert((
             SpriteSheetBundle {
                 texture_atlas: player_walk.walking.clone(),
-                sprite,
-                transform: Transform::default()
-                    // .with_scale(Vec3::splat(PLAYER_SCALE))
-                    .with_translation(PLAYER_SPAWN_POSITION),
+                sprite: TextureAtlasSprite::default(),
+                transform: *transform,
                 ..default()
             },
             AnimationTimer {
@@ -63,18 +78,11 @@ pub fn spawn_player(
                 frame_count: 3,
             },
         ))
-        .insert(Player {
-            collider_size: PLAYER_COLLISION_SIZE,
-            is_jumping: false,
-            is_alive: true,
-        })
         .insert(Name::new("player"))
         .insert(physics::InitSpriteRigidBody::Dynamic);
 
-    // After spawning the player, we need to setup the physics
+    // After initializing the player, we need to setup the physics
     state.set(GameState::InitializingPhysics);
-
-    console_log!("spawn_player end");
 }
 
 fn move_player(

@@ -12,7 +12,7 @@ impl Plugin for LevelPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(LdtkPlugin)
             .insert_resource(LevelSelection::Index(0))
-            .add_systems(OnEnter(GameState::BuildingLevel), setup);
+            .add_systems(OnEnter(GameState::LoadingLevel), setup);
     }
 }
 

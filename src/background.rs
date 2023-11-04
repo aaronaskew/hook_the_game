@@ -50,7 +50,7 @@ pub fn setup_background(
                     y: 128.0f32,
                 },
             }),
-            transform: Transform::from_translation(Vec3::new(0., 0., 0.)),
+            transform: Transform::from_translation(Vec3::new(0., 0., -10.)),
             // .with_rotation(Quat::from_rotation_x(180.0)), //FIXME to avoid the rotate2D call in all shaders..
             ..default()
         },

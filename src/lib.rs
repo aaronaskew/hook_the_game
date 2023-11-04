@@ -53,7 +53,7 @@ enum GameState {
     /// #### Transitions:
     /// - Any => `BuildingLevel`
     /// - `BuildingLevel` => `SpawningPlayer`
-    BuildingLevel,
+    LoadingLevel,
 
     /// During this State the player is spawned
     /// - `BuildingLevel` => `SpawningPlayer`
