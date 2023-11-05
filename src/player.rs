@@ -7,7 +7,7 @@ use bevy_xpbd_2d::prelude::{CollidingEntities, LinearVelocity, RayHits};
 
 pub const PLAYER_COLLISION_SIZE: Vec2 = Vec2 { x: 10.0, y: 32.0 };
 pub const WALK_SPEED: f32 = 150.;
-pub const JUMP_SPEED: f32 = 500.;
+pub const JUMP_SPEED: f32 = 300.;
 
 pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {

@@ -1,7 +1,7 @@
 use std::default;
 
 use crate::{
-    level::Ground,
+    level::{Ground, Wall},
     player::{self, Player},
     GameState,
 };
@@ -14,8 +14,8 @@ use bevy_xpbd_2d::{parry::shape::Cuboid, prelude::*};
 pub const NEXT_STATE: GameState = GameState::Playing;
 
 // character is 32px tall, assume 2m in height, 1m = 16px
-pub const GRAVITY: f32 = 9.8 * 16.0;
-
+// pub const GRAVITY: f32 = 9.8 * 16.0;
+pub const GRAVITY: f32 = 700.0;
 
 // #[derive(Reflect, Resource, Default, InspectorOptions)]
 // #[reflect(Resource, InspectorOptions)]
@@ -50,11 +50,6 @@ impl Plugin for PhysicsPlugin {
                     .run_if(in_state(GameState::InitializingPhysics))
                     .after(init_sprite_physics),
             );
-            // .insert_resource(PhysicsConstants {
-            //     walk_speed: WALK_SPEED,
-            //     jump_speed: JUMP_SPEED,
-            // })
-            // .register_type::<PhysicsConstants>();
     }
 }
 
@@ -65,7 +60,16 @@ fn collider_from_aabb(aabb: &Aabb) -> Collider {
 /// init physics based on sprite shape and InitSpriteRigidbody type
 pub fn init_sprite_physics(
     mut commands: Commands,
-    non_player: Query<(Entity, Option<&Aabb>, &InitSpriteRigidBody), Without<Player>>,
+    non_player: Query<
+        (
+            Entity,
+            Option<&Aabb>,
+            &InitSpriteRigidBody,
+            Option<&Ground>,
+            Option<&Wall>,
+        ),
+        Without<Player>,
+    >,
     player: Query<(Entity, &InitSpriteRigidBody), With<Player>>,
 ) {
     console_log!(
@@ -101,7 +105,7 @@ pub fn init_sprite_physics(
     }
 
     // set up non-player entities, using the Aabb bounds of the sprite for the collider
-    for (e, aabb, srb) in non_player.iter() {
+    for (e, aabb, srb, ground, wall) in non_player.iter() {
         let collider;
 
         if let Some(aabb) = aabb {
@@ -110,6 +114,22 @@ pub fn init_sprite_physics(
             //if there is no Aabb component, assuming these are 32x32 sprites
             collider = Collider::cuboid(32., 32.);
         }
+
+        // let friction = if ground.is_some() {
+        //     Friction {
+        //         dynamic_coefficient: 0.1,
+        //         static_coefficient: 0.0,
+        //         combine_rule: CoefficientCombine::Average,
+        //     }
+        // } else if wall.is_some() {
+        //     Friction {
+        //         dynamic_coefficient: 0.0,
+        //         static_coefficient: 0.0,
+        //         combine_rule: CoefficientCombine::Average,
+        //     }
+        // } else {
+        //     Friction::default()
+        // };
 
         commands
             .entity(e)
@@ -123,12 +143,6 @@ pub fn init_sprite_physics(
                 LockedAxes::ROTATION_LOCKED,
                 Restitution::ZERO.with_combine_rule(CoefficientCombine::Min),
                 ExternalForce::ZERO,
-                Friction {
-                    dynamic_coefficient: 1.0,
-                    static_coefficient: 0.0,
-                    combine_rule: CoefficientCombine::Average,
-                },
-                RayCaster::new(Vec2::ZERO, Vec2::NEG_Y),
             ))
             .remove::<InitSpriteRigidBody>();
     }

@@ -2,6 +2,7 @@ use crate::{loading::LevelAsset, physics::InitSpriteRigidBody, GameState};
 use bevy::prelude::*;
 //use bevy_debug_text_overlay::screen_print;
 use bevy_ecs_ldtk::prelude::*;
+use bevy_xpbd_2d::prelude::Friction;
 
 pub struct LevelPlugin;
 
@@ -53,19 +54,40 @@ pub struct Ground;
 pub struct Wall;
 
 #[derive(Clone, Debug, Default, Bundle, LdtkIntCell)]
-pub struct GroundBundle {
-    #[with(init_sprite_rigidbody_static)]
+pub struct ColliderTileBundle {
+    pub name: Name,
     pub rigid_body: InitSpriteRigidBody,
+    pub friction: Friction,
+}
+
+#[derive(Clone, Debug, Default, Bundle, LdtkIntCell)]
+pub struct GroundBundle {
     pub ground: Ground,
+    #[from_int_grid_cell]
+    pub collider_tile_bundle: ColliderTileBundle,
 }
 
 #[derive(Clone, Debug, Default, Bundle, LdtkIntCell)]
 pub struct WallBundle {
-    #[with(init_sprite_rigidbody_static)]
-    pub rigid_body: InitSpriteRigidBody,
     pub wall: Wall,
+    #[from_int_grid_cell]
+    pub collider_tile_bundle: ColliderTileBundle,
 }
 
-pub fn init_sprite_rigidbody_static(_: IntGridCell) -> InitSpriteRigidBody {
-    InitSpriteRigidBody::Static
+impl From<IntGridCell> for ColliderTileBundle {
+    fn from(int_grid_cell: IntGridCell) -> Self {
+        match int_grid_cell.value {
+            2 => ColliderTileBundle {
+                name: Name::new("Ground"),
+                rigid_body: InitSpriteRigidBody::Static,
+                friction: Friction::new(0.1),
+            },
+            3 => ColliderTileBundle {
+                name: Name::new("Wall"),
+                rigid_body: InitSpriteRigidBody::Static,
+                friction: Friction::new(0.),
+            },
+            _ => ColliderTileBundle::default(),
+        }
+    }
 }
