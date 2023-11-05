@@ -1,11 +1,11 @@
 use crate::loading::PlayerWalkTextureAtlasAsset;
-use crate::{actions::Actions, level::Ground, physics::*};
 use crate::GameState;
 use crate::*;
+use crate::{actions::Actions, level::Ground, physics::*};
 use bevy_ecs_ldtk::prelude::*;
 use bevy_xpbd_2d::prelude::{CollidingEntities, LinearVelocity, Position, RayHits};
 
-const PLAYER_COLLISION_SIZE: Vec2 = Vec2 { x: 10.0, y: 32.0 };
+pub const PLAYER_COLLISION_SIZE: Vec2 = Vec2 { x: 10.0, y: 32.0 };
 
 pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
@@ -16,19 +16,18 @@ impl Plugin for PlayerPlugin {
             // register the PlayerLdtkBundle in order to spawn the player entity via
             // the ldtk level
             .register_ldtk_entity::<PlayerLdtkBundle>("Player")
-            .add_systems(OnEnter(GameState::SpawningPlayer), initialize_player)
+            .add_systems(OnEnter(GameState::SpawningEntities), initialize_player)
             .add_systems(
                 Update,
                 (move_player, update_player_animation, death_check)
                     .run_if(in_state(GameState::Playing)),
             )
-            .add_systems(OnExit(GameState::Playing), despawn_player);
+            .add_systems(OnExit(GameState::Playing), cleanup);
     }
 }
 
 #[derive(Component, Reflect)]
 pub struct Player {
-    pub collider_size: Vec2,
     pub is_jumping: bool,
     pub is_alive: bool,
 }
@@ -37,7 +36,6 @@ pub struct Player {
 impl Default for Player {
     fn default() -> Self {
         Player {
-            collider_size: PLAYER_COLLISION_SIZE,
             is_jumping: false,
             is_alive: true,
         }
@@ -117,11 +115,6 @@ fn move_player(
     // screen_print!("is_grounded: {}", is_grounded);
     // screen_print!("is_jumping: {}", player.is_jumping);
     // screen_print!("is_grounded: {}", is_grounded);
-
-    //check for wall collisions and thus death
-    if position.x.abs() > 400. || position.y.abs() > 300. {
-        state.set(GameState::PlayingCutScene);
-    }
 }
 
 fn update_player_animation(
@@ -152,7 +145,7 @@ fn update_player_animation(
     }
 }
 
-fn despawn_player(players: Query<(Entity, With<Player>)>, mut commands: Commands) {
+fn cleanup(players: Query<(Entity, With<Player>)>, mut commands: Commands) {
     for (player, _) in &players {
         commands.entity(player).despawn();
     }

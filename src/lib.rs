@@ -7,7 +7,9 @@ mod audio;
 #[macro_use]
 mod utils;
 mod background;
-mod debug; //TODO make this dynamic based on build
+#[cfg(debug_assertions)]
+mod debug;
+mod enemy;
 mod level;
 mod loading;
 mod menu;
@@ -19,7 +21,9 @@ mod video;
 use crate::actions::ActionsPlugin;
 use crate::audio::InternalAudioPlugin;
 use crate::background::BackgroundPlugin;
+#[cfg(debug_assertions)]
 use crate::debug::DebugPlugin;
+use crate::enemy::EnemyPlugin;
 use crate::level::LevelPlugin;
 use crate::loading::LoadingPlugin;
 use crate::menu::MenuPlugin;
@@ -58,7 +62,7 @@ enum GameState {
     /// During this State the player is spawned
     /// - `BuildingLevel` => `SpawningPlayer`
     /// - `SpawningPlayer` => `InitializingPhysics`
-    SpawningPlayer,
+    SpawningEntities,
 
     /// Initializes physics
     /// - `SpawningPlayer` => `InitializingPhysics`
@@ -111,6 +115,7 @@ impl Plugin for GamePlugin {
                 PhysicsPlugin,
                 LevelPlugin,
                 BackgroundPlugin,
+                EnemyPlugin,
             ))
             .add_systems(
                 OnEnter(GameState::Initializing),

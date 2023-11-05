@@ -17,6 +17,7 @@ impl Plugin for LoadingPlugin {
         )
         .add_collection_to_loading_state::<_, AudioAssets>(GameState::Loading)
         .add_collection_to_loading_state::<_, PlayerWalkTextureAtlasAsset>(GameState::Loading)
+        .add_collection_to_loading_state::<_, EnemyWalkTextureAtlasAsset>(GameState::Loading)
         .add_collection_to_loading_state::<_, LevelAsset>(GameState::Loading);
     }
 }
@@ -36,6 +37,13 @@ pub struct AudioAssets {
 pub struct PlayerWalkTextureAtlasAsset {
     #[asset(texture_atlas(tile_size_x = 32., tile_size_y = 32., columns = 3, rows = 1))]
     #[asset(path = "sprites/hook_sheet.png")]
+    pub walking: Handle<TextureAtlas>,
+}
+
+#[derive(AssetCollection, Resource)]
+pub struct EnemyWalkTextureAtlasAsset {
+    #[asset(texture_atlas(tile_size_x = 64., tile_size_y = 32., columns = 2, rows = 1))]
+    #[asset(path = "sprites/crocodile_sheet.png")]
     pub walking: Handle<TextureAtlas>,
 }
 

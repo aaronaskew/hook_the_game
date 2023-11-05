@@ -1,4 +1,8 @@
-use crate::{level::Ground, player::Player, GameState};
+use crate::{
+    level::Ground,
+    player::{self, Player},
+    GameState,
+};
 use bevy::{prelude::*, render::primitives::Aabb};
 //use bevy_debug_text_overlay::screen_print;
 use bevy_inspector_egui::{prelude::ReflectInspectorOptions, InspectorOptions};
@@ -43,12 +47,6 @@ impl Plugin for PhysicsPlugin {
                     .run_if(in_state(GameState::InitializingPhysics))
                     .after(init_sprite_physics),
             )
-            .add_systems(
-                OnEnter(GameState::InitializingPhysics),
-                debug_ground
-                    .after(init_sprite_physics)
-                    .before(next_state_after_physics_settle),
-            )
             .insert_resource(PhysicsConstants {
                 walk_speed: WALK_SPEED,
                 jump_speed: JUMP_SPEED,
@@ -64,11 +62,11 @@ fn collider_from_aabb(aabb: &Aabb) -> Collider {
 /// init physics based on sprite shape and InitSpriteRigidbody type
 pub fn init_sprite_physics(
     mut commands: Commands,
-    query: Query<(Entity, &Aabb, &InitSpriteRigidBody), Without<Player>>,
-    player: Query<(Entity, &InitSpriteRigidBody, &Player)>,
+    non_player: Query<(Entity, &Aabb, &InitSpriteRigidBody), Without<Player>>,
+    player: Query<(Entity, &InitSpriteRigidBody), With<Player>>,
 ) {
     // set up player entities using the player.size for the collider
-    for (e, srb, player) in player.iter() {
+    for (e, srb) in player.iter() {
         commands
             .entity(e)
             .insert((
@@ -77,7 +75,10 @@ pub fn init_sprite_physics(
                     InitSpriteRigidBody::Kinematic => RigidBody::Kinematic,
                     InitSpriteRigidBody::Static => RigidBody::Static,
                 },
-                Collider::cuboid(player.collider_size.x, player.collider_size.y),
+                Collider::cuboid(
+                    player::PLAYER_COLLISION_SIZE.x,
+                    player::PLAYER_COLLISION_SIZE.y,
+                ),
                 LockedAxes::ROTATION_LOCKED,
                 Restitution::ZERO.with_combine_rule(CoefficientCombine::Min),
                 ExternalForce::ZERO,
@@ -92,7 +93,7 @@ pub fn init_sprite_physics(
     }
 
     // set up non-player entities, using the Aabb bounds of the sprite for the collider
-    for (e, aabb, srb) in query.iter() {
+    for (e, aabb, srb) in non_player.iter() {
         commands
             .entity(e)
             .insert((
@@ -152,17 +153,4 @@ pub fn next_state_after_physics_settle(
     if not_sleeping_q.iter().len() == 0 {
         state.set(NEXT_STATE);
     }
-}
-
-// TODO testing physics
-
-pub fn debug_ground(mut commands: Commands) {
-    //screen_print!("debug_ground()");
-    commands.spawn((
-        RigidBody::Static,
-        Collider::cuboid(700.0, 10.),
-        Name::new("ground"),
-        Position(Vec2::ZERO),
-        Ground,
-    ));
 }
