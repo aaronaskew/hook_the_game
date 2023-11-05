@@ -6,6 +6,8 @@ use bevy_ecs_ldtk::prelude::*;
 use bevy_xpbd_2d::prelude::{CollidingEntities, LinearVelocity, RayHits};
 
 pub const PLAYER_COLLISION_SIZE: Vec2 = Vec2 { x: 10.0, y: 32.0 };
+pub const WALK_SPEED: f32 = 150.;
+pub const JUMP_SPEED: f32 = 500.;
 
 pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
@@ -28,6 +30,8 @@ impl Plugin for PlayerPlugin {
 
 #[derive(Component, Reflect)]
 pub struct Player {
+    pub walk_speed: f32,
+    pub jump_speed: f32,
     pub is_jumping: bool,
     pub is_alive: bool,
 }
@@ -36,6 +40,8 @@ pub struct Player {
 impl Default for Player {
     fn default() -> Self {
         Player {
+            walk_speed: WALK_SPEED,
+            jump_speed: JUMP_SPEED,
             is_jumping: false,
             is_alive: true,
         }
@@ -47,6 +53,8 @@ impl Default for Player {
 #[derive(Default, Bundle, LdtkEntity)]
 pub struct PlayerLdtkBundle {
     player: Player,
+    #[worldly]
+    worldly: Worldly,
 }
 
 /// This is the system that will be called after the player is
@@ -83,7 +91,6 @@ fn initialize_player(
 
 fn move_player(
     actions: Res<Actions>,
-    physics_constants: Res<PhysicsConstants>,
     mut player_velocity: Query<(&mut LinearVelocity, &mut Player)>,
     player_collisions_query: Query<(&RayHits, &CollidingEntities), With<Player>>,
     grounds_query: Query<Entity, With<Ground>>,
@@ -93,8 +100,8 @@ fn move_player(
     // handle moving
     if actions.player_movement.is_some() {
         let movement = Vec2::new(
-            actions.player_movement.unwrap().x * physics_constants.walk_speed, // * time.delta_seconds(),
-            actions.player_movement.unwrap().y * physics_constants.walk_speed, // * time.delta_seconds(),
+            actions.player_movement.unwrap().x * player.walk_speed,
+            actions.player_movement.unwrap().y * player.walk_speed,
         );
 
         velocity.x = movement.x;
@@ -108,7 +115,7 @@ fn move_player(
         }
     } else if actions.jump && is_grounded {
         player.is_jumping = true;
-        velocity.y = physics_constants.jump_speed;
+        velocity.y = player.jump_speed;
     }
 
     // screen_print!("is_grounded: {}", is_grounded);

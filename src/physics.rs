@@ -15,15 +15,14 @@ pub const NEXT_STATE: GameState = GameState::Playing;
 
 // character is 32px tall, assume 2m in height, 1m = 16px
 pub const GRAVITY: f32 = 9.8 * 16.0;
-pub const WALK_SPEED: f32 = 150.;
-pub const JUMP_SPEED: f32 = 500.;
 
-#[derive(Reflect, Resource, Default, InspectorOptions)]
-#[reflect(Resource, InspectorOptions)]
-pub struct PhysicsConstants {
-    pub walk_speed: f32,
-    pub jump_speed: f32,
-}
+
+// #[derive(Reflect, Resource, Default, InspectorOptions)]
+// #[reflect(Resource, InspectorOptions)]
+// pub struct PhysicsConstants {
+//     pub walk_speed: f32,
+//     pub jump_speed: f32,
+// }
 
 /// A component that tells us to initialize the physics on this entity according
 /// to the type and shape of the sprite
@@ -50,12 +49,12 @@ impl Plugin for PhysicsPlugin {
                 next_state_after_physics_settle
                     .run_if(in_state(GameState::InitializingPhysics))
                     .after(init_sprite_physics),
-            )
-            .insert_resource(PhysicsConstants {
-                walk_speed: WALK_SPEED,
-                jump_speed: JUMP_SPEED,
-            })
-            .register_type::<PhysicsConstants>();
+            );
+            // .insert_resource(PhysicsConstants {
+            //     walk_speed: WALK_SPEED,
+            //     jump_speed: JUMP_SPEED,
+            // })
+            // .register_type::<PhysicsConstants>();
     }
 }
 
