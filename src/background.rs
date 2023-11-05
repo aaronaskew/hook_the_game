@@ -5,7 +5,6 @@ use bevy::{
     render::render_resource::{AsBindGroup, ShaderRef, ShaderType},
     sprite::{Material2d, Material2dPlugin},
 };
-use bevy_debug_text_overlay::screen_print;
 
 pub struct BackgroundPlugin;
 
@@ -21,22 +20,11 @@ pub fn setup_background(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut your_shader: ResMut<Assets<YourShader2D>>,
-    asset_server: Res<AssetServer>,
     windows: Query<&Window>,
 ) {
     let win = windows
         .get_single()
         .expect("Should be impossible to NOT get a window");
-    let (width, height) = (win.width(), win.height());
-
-    // console_log!("win w: {} h: {}", win.width(), win.height());
-
-    // *msd = ShadplayWindowDims(Vec2 {
-    //     x: width / 2.0,
-    //     y: height / 2.0,
-    // });
-
-    // trace!("Set MaxSceenDims set to {width}, {height}");
 
     // Quad
     commands.spawn((
