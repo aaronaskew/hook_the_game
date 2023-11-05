@@ -3,7 +3,7 @@ use crate::GameState;
 use crate::*;
 use crate::{actions::Actions, level::Ground, physics::*};
 use bevy_ecs_ldtk::prelude::*;
-use bevy_xpbd_2d::prelude::{CollidingEntities, LinearVelocity, Position, RayHits};
+use bevy_xpbd_2d::prelude::{CollidingEntities, LinearVelocity, RayHits};
 
 pub const PLAYER_COLLISION_SIZE: Vec2 = Vec2 { x: 10.0, y: 32.0 };
 
@@ -84,12 +84,11 @@ fn initialize_player(
 fn move_player(
     actions: Res<Actions>,
     physics_constants: Res<PhysicsConstants>,
-    mut state: ResMut<NextState<GameState>>,
-    mut player_velocity: Query<(&mut LinearVelocity, &mut Player, &Position)>,
+    mut player_velocity: Query<(&mut LinearVelocity, &mut Player)>,
     player_collisions_query: Query<(&RayHits, &CollidingEntities), With<Player>>,
     grounds_query: Query<Entity, With<Ground>>,
 ) {
-    let (mut velocity, mut player, position) = player_velocity.single_mut();
+    let (mut velocity, mut player) = player_velocity.single_mut();
 
     // handle moving
     if actions.player_movement.is_some() {

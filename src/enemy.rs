@@ -1,11 +1,11 @@
 use crate::loading::EnemyWalkTextureAtlasAsset;
 use crate::GameState;
 use crate::*;
-use crate::{actions::Actions, level::Ground, physics::*};
+use crate::{actions::Actions, level::Ground};
 use bevy_ecs_ldtk::prelude::*;
 use bevy_xpbd_2d::prelude::{CollidingEntities, LinearVelocity, Position, RayHits};
 
-const ENEMY_COLLISION_SIZE: Vec2 = Vec2 { x: 64.0, y: 32.0 };
+// const ENEMY_COLLISION_SIZE: Vec2 = Vec2 { x: 64.0, y: 32.0 };
 
 pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
@@ -58,7 +58,6 @@ fn initialize_enemies(
     mut commands: Commands,
     query: Query<(Entity, &Transform), With<Enemy>>,
     enemy_walk: Res<EnemyWalkTextureAtlasAsset>,
-    mut state: ResMut<NextState<GameState>>,
 ) {
     for (entity, transform) in query.iter() {
         commands

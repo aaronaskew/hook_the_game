@@ -1,10 +1,7 @@
-use crate::{loading::LevelAsset, GameState};
+use crate::{loading::LevelAsset, physics::InitSpriteRigidBody, GameState};
 use bevy::prelude::*;
 //use bevy_debug_text_overlay::screen_print;
 use bevy_ecs_ldtk::prelude::*;
-
-#[derive(Component)]
-pub struct Ground;
 
 pub struct LevelPlugin;
 
@@ -21,6 +18,8 @@ impl Plugin for LevelPlugin {
                 int_grid_rendering: IntGridRendering::Invisible,
                 level_background: LevelBackground::Nonexistent,
             })
+            .register_ldtk_int_cell::<GroundBundle>(2)
+            .register_ldtk_int_cell::<WallBundle>(3)
             .add_systems(OnEnter(GameState::LoadingLevel), setup)
             .add_systems(OnExit(GameState::Playing), cleanup);
     }
@@ -42,7 +41,31 @@ fn setup(mut commands: Commands, level: Res<LevelAsset>, mut state: ResMut<NextS
 }
 
 fn cleanup(levels: Query<Entity, With<LevelSet>>, mut commands: Commands) {
-    for (level) in &levels {
+    for level in &levels {
         commands.entity(level).despawn();
     }
+}
+
+#[derive(Component, Clone, Debug, Default)]
+pub struct Ground;
+
+#[derive(Component, Clone, Debug, Default)]
+pub struct Wall;
+
+#[derive(Clone, Debug, Default, Bundle, LdtkIntCell)]
+pub struct GroundBundle {
+    #[with(init_sprite_rigidbody_static)]
+    pub rigid_body: InitSpriteRigidBody,
+    pub ground: Ground,
+}
+
+#[derive(Clone, Debug, Default, Bundle, LdtkIntCell)]
+pub struct WallBundle {
+    #[with(init_sprite_rigidbody_static)]
+    pub rigid_body: InitSpriteRigidBody,
+    pub wall: Wall,
+}
+
+pub fn init_sprite_rigidbody_static(_: IntGridCell) -> InitSpriteRigidBody {
+    InitSpriteRigidBody::Static
 }

@@ -1,12 +1,15 @@
+use std::default;
+
 use crate::{
     level::Ground,
     player::{self, Player},
     GameState,
 };
 use bevy::{prelude::*, render::primitives::Aabb};
+use bevy_debug_text_overlay::screen_print;
 //use bevy_debug_text_overlay::screen_print;
 use bevy_inspector_egui::{prelude::ReflectInspectorOptions, InspectorOptions};
-use bevy_xpbd_2d::prelude::*;
+use bevy_xpbd_2d::{parry::shape::Cuboid, prelude::*};
 
 pub const NEXT_STATE: GameState = GameState::Playing;
 
@@ -24,11 +27,12 @@ pub struct PhysicsConstants {
 
 /// A component that tells us to initialize the physics on this entity according
 /// to the type and shape of the sprite
-#[derive(Component)]
+#[derive(Component, Clone, Debug, Default)]
 #[allow(dead_code)]
 pub enum InitSpriteRigidBody {
     Dynamic,
     Kinematic,
+    #[default]
     Static,
 }
 
@@ -62,9 +66,14 @@ fn collider_from_aabb(aabb: &Aabb) -> Collider {
 /// init physics based on sprite shape and InitSpriteRigidbody type
 pub fn init_sprite_physics(
     mut commands: Commands,
-    non_player: Query<(Entity, &Aabb, &InitSpriteRigidBody), Without<Player>>,
+    non_player: Query<(Entity, Option<&Aabb>, &InitSpriteRigidBody), Without<Player>>,
     player: Query<(Entity, &InitSpriteRigidBody), With<Player>>,
 ) {
+    console_log!(
+        "init_sprite_physics: non-player sprites: {}",
+        non_player.iter().len()
+    );
+
     // set up player entities using the player.size for the collider
     for (e, srb) in player.iter() {
         commands
@@ -94,6 +103,15 @@ pub fn init_sprite_physics(
 
     // set up non-player entities, using the Aabb bounds of the sprite for the collider
     for (e, aabb, srb) in non_player.iter() {
+        let collider;
+
+        if let Some(aabb) = aabb {
+            collider = collider_from_aabb(aabb);
+        } else {
+            //if there is no Aabb component, assuming these are 32x32 sprites
+            collider = Collider::cuboid(32., 32.);
+        }
+
         commands
             .entity(e)
             .insert((
@@ -102,12 +120,12 @@ pub fn init_sprite_physics(
                     InitSpriteRigidBody::Kinematic => RigidBody::Kinematic,
                     InitSpriteRigidBody::Static => RigidBody::Static,
                 },
-                collider_from_aabb(aabb),
+                collider,
                 LockedAxes::ROTATION_LOCKED,
                 Restitution::ZERO.with_combine_rule(CoefficientCombine::Min),
                 ExternalForce::ZERO,
                 Friction {
-                    dynamic_coefficient: 0.0,
+                    dynamic_coefficient: 1.0,
                     static_coefficient: 0.0,
                     combine_rule: CoefficientCombine::Average,
                 },
