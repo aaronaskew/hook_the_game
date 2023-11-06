@@ -672,18 +672,18 @@
 						},
 						{
 							"__identifier": "Enemy",
-							"__grid": [3,5],
+							"__grid": [22,5],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": { "tilesetUid": 9, "x": 0, "y": 0, "w": 64, "h": 32 },
 							"__smartColor": "#3E8948",
-							"__worldX": -416,
+							"__worldX": 192,
 							"__worldY": 160,
 							"iid": "c5f43760-6280-11ee-b598-93e0b128bb70",
 							"width": 64,
 							"height": 32,
 							"defUid": 53,
-							"px": [96,160],
+							"px": [704,160],
 							"fieldInstances": []
 						}
 					]

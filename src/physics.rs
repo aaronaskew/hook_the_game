@@ -1,6 +1,7 @@
 use std::default;
 
 use crate::{
+    enemy::Enemy,
     level::{Ground, Wall},
     player::{self, Player},
     GameState,
@@ -35,6 +36,14 @@ pub enum InitSpriteRigidBody {
     Static,
 }
 
+#[derive(PhysicsLayer)]
+pub enum PhysicsLayers {
+    Player,
+    Enemy,
+    Wall,
+    Ground,
+}
+
 pub struct PhysicsPlugin;
 
 /// This plugin handles player related stuff like movement
@@ -60,7 +69,7 @@ fn collider_from_aabb(aabb: &Aabb) -> Collider {
 /// init physics based on sprite shape and InitSpriteRigidbody type
 pub fn init_sprite_physics(
     mut commands: Commands,
-    non_player: Query<
+    non_living: Query<
         (
             Entity,
             Option<&Aabb>,
@@ -68,13 +77,14 @@ pub fn init_sprite_physics(
             Option<&Ground>,
             Option<&Wall>,
         ),
-        Without<Player>,
+        (Without<Player>, Without<Enemy>),
     >,
     player: Query<(Entity, &InitSpriteRigidBody), With<Player>>,
+    enemy: Query<(Entity, &InitSpriteRigidBody), With<Enemy>>,
 ) {
     console_log!(
         "init_sprite_physics: non-player sprites: {}",
-        non_player.iter().len()
+        non_living.iter().len()
     );
 
     // set up player entities using the player.size for the collider
@@ -87,9 +97,57 @@ pub fn init_sprite_physics(
                     InitSpriteRigidBody::Kinematic => RigidBody::Kinematic,
                     InitSpriteRigidBody::Static => RigidBody::Static,
                 },
-                Collider::cuboid(
-                    player::PLAYER_COLLISION_SIZE.x,
-                    player::PLAYER_COLLISION_SIZE.y,
+                Collider::compound(vec![(
+                    Position::default(),
+                    Rotation::default(),
+                    Collider::cuboid(
+                        player::PLAYER_COLLISION_SIZE.x,
+                        player::PLAYER_COLLISION_SIZE.y,
+                    ),
+                )]),
+                CollisionLayers::new(
+                    [PhysicsLayers::Player],
+                    [
+                        PhysicsLayers::Enemy,
+                        PhysicsLayers::Ground,
+                        PhysicsLayers::Wall,
+                    ],
+                ),
+                LockedAxes::ROTATION_LOCKED,
+                Restitution::ZERO.with_combine_rule(CoefficientCombine::Min),
+                ExternalForce::ZERO,
+                Friction {
+                    dynamic_coefficient: 0.0,
+                    static_coefficient: 0.0,
+                    combine_rule: CoefficientCombine::Average,
+                },
+                RayCaster::new(Vec2::ZERO, Vec2::NEG_Y),
+            ))
+            .remove::<InitSpriteRigidBody>();
+    }
+
+    // set up enemy entities
+    for (e, srb) in enemy.iter() {
+        commands
+            .entity(e)
+            .insert((
+                match srb {
+                    InitSpriteRigidBody::Dynamic => RigidBody::Dynamic,
+                    InitSpriteRigidBody::Kinematic => RigidBody::Kinematic,
+                    InitSpriteRigidBody::Static => RigidBody::Static,
+                },
+                Collider::compound(vec![(
+                    Position(Vec2::new(0.0, -4.0)),
+                    Rotation::default(),
+                    Collider::cuboid(64.0, 25.0),
+                )]),
+                CollisionLayers::new(
+                    [PhysicsLayers::Enemy],
+                    [
+                        PhysicsLayers::Player,
+                        PhysicsLayers::Ground,
+                        PhysicsLayers::Wall,
+                    ],
                 ),
                 LockedAxes::ROTATION_LOCKED,
                 Restitution::ZERO.with_combine_rule(CoefficientCombine::Min),
@@ -105,7 +163,7 @@ pub fn init_sprite_physics(
     }
 
     // set up non-player entities, using the Aabb bounds of the sprite for the collider
-    for (e, aabb, srb, ground, wall) in non_player.iter() {
+    for (e, aabb, srb, ground, wall) in non_living.iter() {
         let collider;
 
         if let Some(aabb) = aabb {
@@ -131,6 +189,21 @@ pub fn init_sprite_physics(
         //     Friction::default()
         // };
 
+        let collision_layers = match (ground, wall) {
+            (Some(_), _) => CollisionLayers::new(
+                [PhysicsLayers::Ground],
+                [PhysicsLayers::Player, PhysicsLayers::Enemy],
+            ),
+            (_, Some(_)) => CollisionLayers::new(
+                [PhysicsLayers::Wall],
+                [PhysicsLayers::Player, PhysicsLayers::Enemy],
+            ),
+            _ => CollisionLayers::new(
+                [PhysicsLayers::Ground],
+                [PhysicsLayers::Player, PhysicsLayers::Enemy],
+            ),
+        };
+
         commands
             .entity(e)
             .insert((
@@ -140,6 +213,7 @@ pub fn init_sprite_physics(
                     InitSpriteRigidBody::Static => RigidBody::Static,
                 },
                 collider,
+                collision_layers,
                 LockedAxes::ROTATION_LOCKED,
                 Restitution::ZERO.with_combine_rule(CoefficientCombine::Min),
                 ExternalForce::ZERO,

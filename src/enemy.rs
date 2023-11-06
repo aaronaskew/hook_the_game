@@ -2,6 +2,7 @@ use crate::loading::EnemyWalkTextureAtlasAsset;
 use crate::GameState;
 use crate::*;
 use crate::{actions::Actions, level::Ground};
+use bevy_debug_text_overlay::screen_print;
 use bevy_ecs_ldtk::prelude::*;
 use bevy_xpbd_2d::prelude::{CollidingEntities, LinearVelocity, Position, RayHits};
 
@@ -19,28 +20,31 @@ impl Plugin for EnemyPlugin {
             .add_systems(OnEnter(GameState::SpawningEntities), initialize_enemies)
             .add_systems(
                 Update,
-                (move_enemy, update_enemy_animation, death_check)
-                    .run_if(in_state(GameState::Playing)),
+                (move_enemy, update_enemy_animation).run_if(in_state(GameState::Playing)),
             )
             .add_systems(OnExit(GameState::Playing), cleanup);
     }
 }
 
+#[derive(States, Default, Clone, Eq, PartialEq, Debug, Hash)]
+enum EnemyState {
+    #[default]
+    Patrolling,
+    InPursuitWalking,
+    AttackingDash,
+    AttackingClocks,
+    Dead,
+}
+
 #[derive(Component, Reflect)]
 pub struct Enemy {
-    pub is_walking: bool,
-    pub is_jumping: bool,
-    pub is_alive: bool,
+    pub facing_left: bool,
 }
 
 // implement default()
 impl Default for Enemy {
     fn default() -> Self {
-        Enemy {
-            is_walking: false,
-            is_jumping: false,
-            is_alive: true,
-        }
+        Enemy { facing_left: true }
     }
 }
 
@@ -137,7 +141,7 @@ fn update_enemy_animation(
         //     Some(_) | None => (),
         // }
 
-        if animation_timer.timer.just_finished() && enemy.is_walking {
+        if animation_timer.timer.just_finished() {
             sprite.index = (sprite.index + 1) % animation_timer.frame_count;
         }
     }
@@ -149,14 +153,14 @@ fn cleanup(enemies: Query<(Entity, With<Enemy>)>, mut commands: Commands) {
     }
 }
 
-fn death_check(
-    enemy: Query<(Entity, &Enemy)>,
-    mut state: ResMut<NextState<GameState>>,
-    mut commands: Commands,
-) {
-    for (entity, enemy) in enemy.iter() {
-        if !enemy.is_alive {
-            commands.entity(entity).despawn();
-        }
-    }
-}
+// fn death_check(
+//     enemy: Query<(Entity, &Enemy)>,
+//     mut state: ResMut<NextState<GameState>>,
+//     mut commands: Commands,
+// ) {
+//     for (entity, enemy) in enemy.iter() {
+//         if !enemy.is_alive {
+//             commands.entity(entity).despawn();
+//         }
+//     }
+// }
