@@ -222,7 +222,7 @@ pub fn process_state_change(mut query: Query<(&mut Enemy, &EnemyState), Changed<
             EnemyState::SpewAttack => Some(EnemyAction::SpewAttack {
                 spew_timer: Timer::from_seconds(5.0, TimerMode::Once),
                 spew_rate: 1.0,
-                spew_min_velocity: 100.0,
+                spew_min_velocity: 200.0,
                 spew_max_velocity: 200.0,
             }),
         }
