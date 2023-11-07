@@ -6,6 +6,7 @@ use bevy::{
     prelude::{Plugin, *},
 };
 use bevy_editor_pls::prelude::*;
+use bevy_inspector_egui::DefaultInspectorConfigPlugin;
 
 use crate::loading::AudioAssets;
 

@@ -80,7 +80,7 @@ enum GameState {
     PlayingCutScene,
 }
 
-#[derive(Component)]
+#[derive(Component, Clone, Reflect)]
 pub struct AnimationTimer {
     pub timer: Timer,
     pub frame_count: usize,

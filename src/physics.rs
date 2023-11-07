@@ -6,7 +6,7 @@ use crate::{
     player::{self, Player},
     GameState,
 };
-use bevy::{prelude::*, render::primitives::Aabb};
+use bevy::{prelude::*, render::primitives::Aabb, utils::HashSet};
 use bevy_debug_text_overlay::screen_print;
 //use bevy_debug_text_overlay::screen_print;
 use bevy_inspector_egui::{prelude::ReflectInspectorOptions, InspectorOptions};
@@ -52,6 +52,7 @@ impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(bevy_xpbd_2d::prelude::PhysicsPlugins::default())
             .insert_resource(Gravity(Vec2::NEG_Y * GRAVITY))
+            .register_type::<HashSet<Entity>>()
             .add_systems(OnEnter(GameState::InitializingPhysics), init_sprite_physics)
             .add_systems(
                 Update,
