@@ -42,6 +42,7 @@ pub enum PhysicsLayers {
     Enemy,
     Wall,
     Ground,
+    Projectile,
 }
 
 pub struct PhysicsPlugin;
@@ -112,6 +113,7 @@ pub fn init_sprite_physics(
                         PhysicsLayers::Enemy,
                         PhysicsLayers::Ground,
                         PhysicsLayers::Wall,
+                        PhysicsLayers::Projectile,
                     ],
                 ),
                 LockedAxes::ROTATION_LOCKED,
@@ -193,15 +195,15 @@ pub fn init_sprite_physics(
         let collision_layers = match (ground, wall) {
             (Some(_), _) => CollisionLayers::new(
                 [PhysicsLayers::Ground],
-                [PhysicsLayers::Player, PhysicsLayers::Enemy],
+                [PhysicsLayers::Player, PhysicsLayers::Enemy, PhysicsLayers::Projectile],
             ),
             (_, Some(_)) => CollisionLayers::new(
                 [PhysicsLayers::Wall],
-                [PhysicsLayers::Player, PhysicsLayers::Enemy],
+                [PhysicsLayers::Player, PhysicsLayers::Enemy, PhysicsLayers::Projectile],
             ),
             _ => CollisionLayers::new(
                 [PhysicsLayers::Ground],
-                [PhysicsLayers::Player, PhysicsLayers::Enemy],
+                [PhysicsLayers::Player, PhysicsLayers::Enemy, PhysicsLayers::Projectile],
             ),
         };
 

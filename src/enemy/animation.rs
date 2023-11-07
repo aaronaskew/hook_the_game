@@ -1,6 +1,7 @@
 use bevy::prelude::*;
+use rand::random;
 
-use super::*;
+use super::{clock::SpewClocks, *};
 
 pub fn update_enemy_animation(
     mut sprites: Query<(&mut TextureAtlasSprite, &mut AnimationSettings, &Enemy)>,
@@ -92,10 +93,17 @@ pub fn animation_controller(
 
 /// This system sets the enemy actions and processes them based on the current state
 pub fn process_actions(
-    mut query: Query<(&mut LinearVelocity, &mut EnemyState, &mut Enemy, &Position)>,
+    mut commands: Commands,
+    mut query: Query<(
+        Entity,
+        &mut LinearVelocity,
+        &mut EnemyState,
+        &mut Enemy,
+        &Position,
+    )>,
     time: Res<Time>,
 ) {
-    for (mut velocity, mut state, mut enemy, position) in query.iter_mut() {
+    for (entity, mut velocity, mut state, mut enemy, position) in query.iter_mut() {
         let mut target_delta;
 
         if let Some(target) = enemy.target {
@@ -158,8 +166,21 @@ pub fn process_actions(
                 spew_timer.tick(time.delta());
                 if spew_timer.just_finished() {
                     *state = EnemyState::Patrol;
+                    commands.entity(entity).remove::<SpewClocks>();
                 } else {
                     //spew clocks
+                    commands.entity(entity).insert(SpewClocks {
+                        source_position: Vec2::new(
+                            position.x + if enemy.facing_left { -10.0 } else { 10.0 },
+                            position.y,
+                        ),
+                        // velocity should equal the normalized target_delta and multiplied by a
+                        // random number between spew_min_velocity and spew_max_velocity
+                        velocity: target_delta.normalize()
+                            * (random::<f32>() * (spew_max_velocity - spew_min_velocity)
+                                + spew_min_velocity),
+                        rate_interval: spew_rate,
+                    });
                 }
             }
         }

@@ -18,6 +18,7 @@ impl Plugin for LoadingPlugin {
         .add_collection_to_loading_state::<_, AudioAssets>(GameState::Loading)
         .add_collection_to_loading_state::<_, PlayerWalkTextureAtlasAsset>(GameState::Loading)
         .add_collection_to_loading_state::<_, EnemyTextureAtlasAsset>(GameState::Loading)
+        .add_collection_to_loading_state::<_, ClockTextureAtlasAsset>(GameState::Loading)
         .add_collection_to_loading_state::<_, LevelAsset>(GameState::Loading);
     }
 }
@@ -51,7 +52,7 @@ pub struct EnemyTextureAtlasAsset {
 pub struct ClockTextureAtlasAsset {
     #[asset(texture_atlas(tile_size_x = 32., tile_size_y = 32., columns = 6, rows = 1))]
     #[asset(path = "sprites/clock_sheet.png")]
-    pub enemy_atlas: Handle<TextureAtlas>,
+    pub clock_atlas: Handle<TextureAtlas>,
 }
 
 #[derive(AssetCollection, Resource)]

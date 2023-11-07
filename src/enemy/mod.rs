@@ -10,6 +10,7 @@ use self::animation::{update_enemy_animation, AnimationSettings};
 use self::state::EnemyState;
 
 mod animation;
+mod clock;
 mod state;
 
 pub struct EnemyPlugin;
@@ -35,6 +36,9 @@ impl Plugin for EnemyPlugin {
                     state::attack_state_system,
                     state::patrol_pursue_state_system,
                     check_collisions_with_player,
+                    clock::update_clocks,
+                    clock::check_collisions_with_player,
+                    clock::spew_clocks,
                 )
                     .run_if(in_state(GameState::Playing)),
             )
@@ -58,7 +62,7 @@ pub enum EnemyAction {
     },
     SpewAttack {
         spew_timer: Timer,
-        spew_rate: f32,
+        spew_rate: f64,
         spew_min_velocity: f32,
         spew_max_velocity: f32,
         min_angle: f32,
