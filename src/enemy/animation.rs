@@ -8,7 +8,7 @@ pub fn update_enemy_animation(
     time: Res<Time>,
 ) {
     for (mut sprite, mut animation_settings, enemy) in &mut sprites {
-        let mut timer = &mut animation_settings.animation_timer;
+        let timer = &mut animation_settings.animation_timer;
 
         timer.timer.tick(time.delta());
 
@@ -104,7 +104,7 @@ pub fn process_actions(
     time: Res<Time>,
 ) {
     for (entity, mut velocity, mut state, mut enemy, position) in query.iter_mut() {
-        let mut target_delta;
+        let target_delta;
 
         if let Some(target) = enemy.target {
             target_delta = target.0 - position.0;
@@ -160,8 +160,6 @@ pub fn process_actions(
                 spew_rate,
                 spew_min_velocity,
                 spew_max_velocity,
-                min_angle,
-                max_angle,
             } => {
                 spew_timer.tick(time.delta());
                 if spew_timer.just_finished() {
@@ -226,8 +224,6 @@ pub fn process_state_change(mut query: Query<(&mut Enemy, &EnemyState), Changed<
                 spew_rate: 1.0,
                 spew_min_velocity: 100.0,
                 spew_max_velocity: 200.0,
-                min_angle: 0.0,
-                max_angle: 90.0,
             }),
         }
     }

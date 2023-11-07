@@ -2,11 +2,7 @@ use bevy::prelude::*;
 use bevy_xpbd_2d::prelude::*;
 use rand::random;
 
-use crate::{
-    loading::ClockTextureAtlasAsset, physics::PhysicsLayers, player::Player, AnimationTimer,
-};
-
-use super::animation::AnimationSettings;
+use crate::{loading::ClockTextureAtlasAsset, physics::PhysicsLayers, player::Player};
 
 #[derive(Component)]
 pub struct Clock {
@@ -60,7 +56,6 @@ pub fn update_clocks(
 }
 
 pub fn check_collisions_with_player(
-    mut commands: Commands,
     mut query: Query<&CollidingEntities, With<Clock>>,
     mut player_query: Query<(Entity, &mut Player)>,
 ) {
@@ -107,8 +102,8 @@ pub fn spew_clocks(
     }
 }
 
-fn cleanup(clocks: Query<(Entity, With<Clock>)>, mut commands: Commands) {
-    for (clock, _) in &clocks {
+pub fn cleanup(clocks: Query<Entity, With<Clock>>, mut commands: Commands) {
+    for clock in &clocks {
         commands.entity(clock).despawn();
     }
 }

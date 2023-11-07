@@ -1,13 +1,12 @@
-use crate::level::Ground;
 use crate::loading::EnemyTextureAtlasAsset;
 use crate::player::Player;
 use crate::GameState;
 use crate::*;
 use bevy_ecs_ldtk::prelude::*;
-use bevy_xpbd_2d::prelude::{CollidingEntities, LinearVelocity, Position, RayHits};
+use bevy_xpbd_2d::prelude::*;
+use state::EnemyState;
 
-use self::animation::{update_enemy_animation, AnimationSettings};
-use self::state::EnemyState;
+use self::animation::AnimationSettings;
 
 mod animation;
 mod clock;
@@ -42,7 +41,7 @@ impl Plugin for EnemyPlugin {
                 )
                     .run_if(in_state(GameState::Playing)),
             )
-            .add_systems(OnExit(GameState::Playing), cleanup);
+            .add_systems(OnExit(GameState::Playing), (cleanup, clock::cleanup));
     }
 }
 
@@ -65,8 +64,6 @@ pub enum EnemyAction {
         spew_rate: f64,
         spew_min_velocity: f32,
         spew_max_velocity: f32,
-        min_angle: f32,
-        max_angle: f32,
     },
 }
 

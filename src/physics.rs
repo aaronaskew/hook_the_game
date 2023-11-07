@@ -1,5 +1,3 @@
-use std::default;
-
 use crate::{
     enemy::Enemy,
     level::{Ground, Wall},
@@ -7,10 +5,7 @@ use crate::{
     GameState,
 };
 use bevy::{prelude::*, render::primitives::Aabb, utils::HashSet};
-use bevy_debug_text_overlay::screen_print;
-//use bevy_debug_text_overlay::screen_print;
-use bevy_inspector_egui::{prelude::ReflectInspectorOptions, InspectorOptions};
-use bevy_xpbd_2d::{parry::shape::Cuboid, prelude::*};
+use bevy_xpbd_2d::prelude::*;
 
 pub const NEXT_STATE: GameState = GameState::Playing;
 
@@ -195,15 +190,27 @@ pub fn init_sprite_physics(
         let collision_layers = match (ground, wall) {
             (Some(_), _) => CollisionLayers::new(
                 [PhysicsLayers::Ground],
-                [PhysicsLayers::Player, PhysicsLayers::Enemy, PhysicsLayers::Projectile],
+                [
+                    PhysicsLayers::Player,
+                    PhysicsLayers::Enemy,
+                    PhysicsLayers::Projectile,
+                ],
             ),
             (_, Some(_)) => CollisionLayers::new(
                 [PhysicsLayers::Wall],
-                [PhysicsLayers::Player, PhysicsLayers::Enemy, PhysicsLayers::Projectile],
+                [
+                    PhysicsLayers::Player,
+                    PhysicsLayers::Enemy,
+                    PhysicsLayers::Projectile,
+                ],
             ),
             _ => CollisionLayers::new(
                 [PhysicsLayers::Ground],
-                [PhysicsLayers::Player, PhysicsLayers::Enemy, PhysicsLayers::Projectile],
+                [
+                    PhysicsLayers::Player,
+                    PhysicsLayers::Enemy,
+                    PhysicsLayers::Projectile,
+                ],
             ),
         };
 

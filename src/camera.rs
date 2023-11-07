@@ -1,9 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{
-    player::{self, Player},
-    GameState, GAME_SIZE,
-};
+use crate::{player::Player, GameState};
 
 /// The amount to zoom the scale the camera projection (lower = zoom in)
 pub const CAMERA_ZOOM: f32 = 0.25;
