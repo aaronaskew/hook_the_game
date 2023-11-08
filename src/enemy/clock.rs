@@ -4,9 +4,7 @@ use bevy_xpbd_2d::prelude::*;
 use rand::random;
 
 use crate::{
-    audio::AlarmSoundEffect,
-    loading::{AudioAssets, ClockTextureAtlasAsset},
-    physics::PhysicsLayers,
+    audio::AlarmSoundEffect, loading::ClockTextureAtlasAsset, physics::PhysicsLayers,
     player::Player,
 };
 

@@ -167,16 +167,24 @@ pub fn process_actions(
                     commands.entity(entity).remove::<SpewClocks>();
                 } else {
                     //spew clocks
+
+                    // velocity should equal the normalized target_delta and multiplied by a
+                    // random number between spew_min_velocity and spew_max_velocity
+                    let vx = (random::<f32>() * (spew_max_velocity - spew_min_velocity)
+                        + spew_min_velocity)
+                        * if target_delta.x > 0.0 { 1.0 } else { -1.0 };
+
+                    let velocity = Vec2::new(vx, 0.0);
+
+                    info!("clock velocity: {:?}", velocity);
+
                     commands.entity(entity).insert(SpewClocks {
                         source_position: Vec2::new(
                             position.x + if enemy.facing_left { -10.0 } else { 10.0 },
                             position.y,
                         ),
-                        // velocity should equal the normalized target_delta and multiplied by a
-                        // random number between spew_min_velocity and spew_max_velocity
-                        velocity: target_delta.normalize()
-                            * (random::<f32>() * (spew_max_velocity - spew_min_velocity)
-                                + spew_min_velocity),
+
+                        velocity,
                         rate_interval: spew_rate,
                         played_sound: false,
                     });
