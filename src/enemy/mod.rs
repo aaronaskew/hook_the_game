@@ -1,3 +1,4 @@
+use self::animation::AnimationSettings;
 use crate::loading::EnemyTextureAtlasAsset;
 use crate::player::Player;
 use crate::GameState;
@@ -5,8 +6,6 @@ use crate::*;
 use bevy_ecs_ldtk::prelude::*;
 use bevy_xpbd_2d::prelude::*;
 use state::EnemyState;
-
-use self::animation::AnimationSettings;
 
 mod animation;
 mod clock;

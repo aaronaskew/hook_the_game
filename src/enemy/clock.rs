@@ -1,8 +1,14 @@
 use bevy::prelude::*;
+use bevy_kira_audio::{Audio, AudioInstance, AudioTween};
 use bevy_xpbd_2d::prelude::*;
 use rand::random;
 
-use crate::{loading::ClockTextureAtlasAsset, physics::PhysicsLayers, player::Player};
+use crate::{
+    audio::AlarmSoundEffect,
+    loading::{AudioAssets, ClockTextureAtlasAsset},
+    physics::PhysicsLayers,
+    player::Player,
+};
 
 #[derive(Component)]
 pub struct Clock {
@@ -40,6 +46,7 @@ pub struct SpewClocks {
     pub source_position: Vec2,
     pub velocity: Vec2,
     pub rate_interval: f64,
+    pub played_sound: bool,
 }
 
 pub fn update_clocks(
@@ -72,13 +79,22 @@ pub fn check_collisions_with_player(
 
 pub fn spew_clocks(
     mut commands: Commands,
-    query: Query<&SpewClocks>,
+    mut query: Query<&mut SpewClocks>,
     time: Res<Time>,
     clock: Res<ClockTextureAtlasAsset>,
+    ticktock: Res<AlarmSoundEffect>,
+    mut audio_assets: ResMut<Assets<AudioInstance>>,
 ) {
-    for spew in query.iter() {
+    for mut spew in query.iter_mut() {
         let current_time = time.elapsed_seconds_f64();
         let at_interval = |t: f64| current_time % t < time.delta_seconds_f64();
+
+        if !spew.played_sound {
+            if let Some(instance) = audio_assets.get_mut(&ticktock.0) {
+                instance.resume(AudioTween::default());
+            }
+            spew.played_sound = true;
+        }
 
         if at_interval(spew.rate_interval) {
             commands

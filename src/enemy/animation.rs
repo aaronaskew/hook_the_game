@@ -178,6 +178,7 @@ pub fn process_actions(
                             * (random::<f32>() * (spew_max_velocity - spew_min_velocity)
                                 + spew_min_velocity),
                         rate_interval: spew_rate,
+                        played_sound: false,
                     });
                 }
             }
