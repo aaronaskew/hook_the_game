@@ -96,18 +96,18 @@ pub fn process_actions(
     mut commands: Commands,
     mut query: Query<(
         Entity,
-        &mut LinearVelocity,
+        &mut Velocity,
         &mut EnemyState,
         &mut Enemy,
-        &Position,
+        &GlobalTransform,
     )>,
     time: Res<Time>,
 ) {
     for (entity, mut velocity, mut state, mut enemy, position) in query.iter_mut() {
-        let target_delta;
+        let target_delta:Vec2;
 
         if let Some(target) = enemy.target {
-            target_delta = target.0 - position.0;
+            target_delta = target.translation().truncate() - position.translation().truncate();
         } else {
             target_delta = Vec2::ZERO;
         }
@@ -130,10 +130,10 @@ pub fn process_actions(
                 if direction_timer.just_finished() {
                     enemy.facing_left = !enemy.facing_left;
                 }
-                velocity.x = if enemy.facing_left { -speed } else { speed };
+                velocity.linvel.x = if enemy.facing_left { -speed } else { speed };
             }
             EnemyAction::Pursue { speed } => {
-                velocity.x = if target_delta.x > 0.0 { speed } else { -speed };
+                velocity.linvel.x = if target_delta.x > 0.0 { speed } else { -speed };
             }
             EnemyAction::LungeAttack {
                 ref mut before_lunge_timer,
@@ -144,8 +144,8 @@ pub fn process_actions(
 
                 if before_lunge_timer.just_finished() {
                     //lunge
-                    velocity.x = if enemy.facing_left { -speed } else { speed };
-                    velocity.y = speed;
+                    velocity.linvel.x = if enemy.facing_left { -speed } else { speed };
+                    velocity.linvel.y = speed;
                 } else if before_lunge_timer.finished() && is_grounded {
                     after_lunge_timer.tick(time.delta());
 
@@ -180,8 +180,8 @@ pub fn process_actions(
 
                     commands.entity(entity).insert(SpewClocks {
                         source_position: Vec2::new(
-                            position.x + if enemy.facing_left { -10.0 } else { 10.0 },
-                            position.y,
+                            position.translation().x + if enemy.facing_left { -10.0 } else { 10.0 },
+                            position.translation().y,
                         ),
 
                         velocity,
@@ -193,7 +193,7 @@ pub fn process_actions(
         }
 
         // set direction
-        match (*state, velocity.x, target_delta) {
+        match (*state, velocity.linvel.x, target_delta) {
             (_, vx, _) if vx > 0.0 => {
                 enemy.facing_left = false;
             }

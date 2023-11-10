@@ -20,13 +20,15 @@ pub enum EnemyState {
 /// - If so, it sets the `EnemyState` to `Pursue`.
 /// - If not, it sets the `EnemyState` to `Patrol`.
 pub fn patrol_pursue_state_system(
-    mut query: Query<(&Position, &mut EnemyState, &mut Enemy), Without<Player>>,
-    player: Query<&Position, With<Player>>,
+    mut query: Query<(&GlobalTransform, &mut EnemyState, &mut Enemy), Without<Player>>,
+    player: Query<&GlobalTransform, With<Player>>,
 ) {
     let player_position = player.single();
 
     for (position, mut state, mut enemy) in query.iter_mut() {
-        let distance = player_position.distance(position.0);
+        let distance = player_position
+            .translation()
+            .distance(position.translation());
 
         match (*state, distance) {
             (EnemyState::Patrol, d) if d <= enemy.patrol_range => {
@@ -45,13 +47,15 @@ pub fn patrol_pursue_state_system(
 /// This checks to see if the player is within attack range of the enemies. If so,
 /// it sets the `EnemyState` to a random attack state using `get_random_attack_state()`.
 pub fn attack_state_system(
-    mut query: Query<(&Position, &mut EnemyState, &mut Enemy), Without<Player>>,
-    player: Query<&Position, With<Player>>,
+    mut query: Query<(&GlobalTransform, &mut EnemyState, &mut Enemy), Without<Player>>,
+    player: Query<&GlobalTransform, With<Player>>,
 ) {
     let player_position = player.single();
 
     for (position, mut state, mut enemy) in query.iter_mut() {
-        let distance = player_position.distance(position.0);
+        let distance = player_position
+            .translation()
+            .distance(position.translation());
 
         match (*state, distance) {
             (EnemyState::Patrol | EnemyState::Pursue, d) if d < enemy.attack_range => {

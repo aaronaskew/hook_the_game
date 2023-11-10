@@ -1,12 +1,9 @@
 use bevy::prelude::*;
 use bevy_kira_audio::{AudioInstance, AudioTween};
-use bevy_xpbd_2d::prelude::*;
+use bevy_rapier2d::prelude::*;
 use rand::random;
 
-use crate::{
-    audio::AlarmSoundEffect, loading::ClockTextureAtlasAsset, physics::PhysicsLayers,
-    player::Player,
-};
+use crate::{audio::AlarmSoundEffect, loading::ClockTextureAtlasAsset, physics, player::Player};
 
 #[derive(Component)]
 pub struct Clock {
@@ -18,7 +15,7 @@ pub struct ClockBundle {
     pub clock: Clock,
     pub rigid_body: RigidBody,
     pub collider: Collider,
-    pub collision_layers: CollisionLayers,
+    pub collision_layers: CollisionGroups,
 }
 
 impl Default for ClockBundle {
@@ -27,13 +24,11 @@ impl Default for ClockBundle {
             clock: Clock { lifetime: 5.0 },
             rigid_body: RigidBody::Dynamic,
             collider: Collider::ball(9.0),
-            collision_layers: CollisionLayers::new(
-                [PhysicsLayers::Projectile],
-                [
-                    PhysicsLayers::Player,
-                    PhysicsLayers::Ground,
-                    PhysicsLayers::Wall,
-                ],
+            collision_layers: CollisionGroups::new(
+                physics::COLLISION_GROUP_PROJECTILE,
+                physics::COLLISION_GROUP_PLAYER
+                    | physics::COLLISION_GROUP_GROUND
+                    | physics::COLLISION_GROUP_WALL,
             ),
         }
     }
@@ -68,7 +63,7 @@ pub fn check_collisions_with_player(
 
     for entities in query.iter_mut() {
         for entity in entities.iter() {
-            if entity == &player_entity {
+            if entity == player_entity {
                 player.is_alive = false;
             }
         }
@@ -97,8 +92,14 @@ pub fn spew_clocks(
         if at_interval(spew.rate_interval) {
             commands
                 .spawn(ClockBundle::default())
-                .insert(Position(spew.source_position))
-                .insert(LinearVelocity(spew.velocity))
+                .insert(Transform {
+                    translation: spew.source_position.extend(0.0),
+                    ..default()
+                })
+                .insert(Velocity {
+                    linvel: spew.velocity,
+                    ..default()
+                })
                 .insert(SpriteSheetBundle {
                     texture_atlas: clock.clock_atlas.clone(),
                     sprite: TextureAtlasSprite {

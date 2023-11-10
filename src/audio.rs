@@ -4,7 +4,6 @@ use crate::player::Player;
 use crate::GameState;
 use bevy::prelude::*;
 use bevy_kira_audio::prelude::*;
-use bevy_xpbd_2d::prelude::Position;
 
 pub struct InternalAudioPlugin;
 
@@ -85,19 +84,19 @@ fn start_enemy_sound_fx(mut commands: Commands, audio_assets: Res<AudioAssets>, 
 
 /// Attenuate the ticktock sound based on the distance between the player and the closest enemy
 fn attenuate_ticktock(
-    player_query: Query<&Position, With<Player>>,
-    enemy_query: Query<&Position, With<Enemy>>,
+    player_query: Query<&GlobalTransform, With<Player>>,
+    enemy_query: Query<&GlobalTransform, With<Enemy>>,
     ticktock: Res<TickTockLoop>,
     mut audio_assets: ResMut<Assets<AudioInstance>>,
 ) {
     const MAX_DISTANCE: f32 = 320.;
     const MAX_VOLUME: f32 = 0.3;
 
-    let player_position = player_query.single();
+    let player_position = player_query.single().translation();
     let mut distances = Vec::<f32>::new();
 
     for enemy_position in enemy_query.iter() {
-        distances.push(enemy_position.distance(player_position.0));
+        distances.push(enemy_position.translation().distance(player_position));
     }
 
     distances.sort_by(|a, b| a.partial_cmp(b).unwrap());

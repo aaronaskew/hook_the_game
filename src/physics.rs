@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     enemy::Enemy,
     level::{Ground, Wall},
@@ -5,13 +7,13 @@ use crate::{
     GameState,
 };
 use bevy::{prelude::*, render::primitives::Aabb, utils::HashSet};
-use bevy_xpbd_2d::prelude::*;
+use bevy_rapier2d::prelude::*;
 
 pub const NEXT_STATE: GameState = GameState::Playing;
 
 // character is 32px tall, assume 2m in height, 1m = 16px
 // pub const GRAVITY: f32 = 9.8 * 16.0;
-pub const GRAVITY: f32 = 700.0;
+// pub const GRAVITY: f32 = 700.0;
 
 // #[derive(Reflect, Resource, Default, InspectorOptions)]
 // #[reflect(Resource, InspectorOptions)]
@@ -31,14 +33,11 @@ pub enum InitSpriteRigidBody {
     Static,
 }
 
-#[derive(PhysicsLayer)]
-pub enum PhysicsLayers {
-    Player,
-    Enemy,
-    Wall,
-    Ground,
-    Projectile,
-}
+pub const COLLISION_GROUP_PLAYER: Group = Group::GROUP_1;
+pub const COLLISION_GROUP_WALL: Group = Group::GROUP_2;
+pub const COLLISION_GROUP_GROUND: Group = Group::GROUP_3;
+pub const COLLISION_GROUP_PROJECTILE: Group = Group::GROUP_4;
+pub const COLLISION_GROUP_ENEMY: Group = Group::GROUP_5;
 
 pub struct PhysicsPlugin;
 
@@ -46,8 +45,7 @@ pub struct PhysicsPlugin;
 /// Player logic is only active during the State `GameState::Playing`
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(bevy_xpbd_2d::prelude::PhysicsPlugins::default())
-            .insert_resource(Gravity(Vec2::NEG_Y * GRAVITY))
+        app.add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(16.0))
             .register_type::<HashSet<Entity>>()
             .add_systems(OnEnter(GameState::InitializingPhysics), init_sprite_physics)
             .add_systems(
@@ -91,35 +89,38 @@ pub fn init_sprite_physics(
             .insert((
                 match srb {
                     InitSpriteRigidBody::Dynamic => RigidBody::Dynamic,
-                    InitSpriteRigidBody::Kinematic => RigidBody::Kinematic,
-                    InitSpriteRigidBody::Static => RigidBody::Static,
+                    InitSpriteRigidBody::Kinematic => RigidBody::KinematicPositionBased,
+                    InitSpriteRigidBody::Static => RigidBody::Fixed,
                 },
-                Collider::compound(vec![(
-                    Position::default(),
-                    Rotation::default(),
-                    Collider::cuboid(
-                        player::PLAYER_COLLISION_SIZE.x,
-                        player::PLAYER_COLLISION_SIZE.y,
-                    ),
-                )]),
-                CollisionLayers::new(
-                    [PhysicsLayers::Player],
-                    [
-                        PhysicsLayers::Enemy,
-                        PhysicsLayers::Ground,
-                        PhysicsLayers::Wall,
-                        PhysicsLayers::Projectile,
-                    ],
+                Collider::cuboid(
+                    player::PLAYER_COLLISION_SIZE.x / 2.0,
+                    player::PLAYER_COLLISION_SIZE.y / 2.0,
                 ),
+                CollisionGroups::new(
+                    COLLISION_GROUP_PLAYER,
+                    COLLISION_GROUP_ENEMY
+                        | COLLISION_GROUP_GROUND
+                        | COLLISION_GROUP_WALL
+                        | COLLISION_GROUP_PROJECTILE,
+                ),
+                // CollisionGroups::new(
+                //     [COLLISION_GROUP_Player],
+                //     [
+                //         COLLISION_GROUP_Enemy,
+                //         COLLISION_GROUP_Ground,
+                //         COLLISION_GROUP_Wall,
+                //         COLLISION_GROUP_Projectile,
+                //     ],
+                // ),
                 LockedAxes::ROTATION_LOCKED,
-                Restitution::ZERO.with_combine_rule(CoefficientCombine::Min),
-                ExternalForce::ZERO,
-                Friction {
-                    dynamic_coefficient: 0.0,
-                    static_coefficient: 0.0,
-                    combine_rule: CoefficientCombine::Average,
+                Restitution {
+                    coefficient: 0.0,
+                    combine_rule: CoefficientCombineRule::Min,
                 },
-                RayCaster::new(Vec2::ZERO, Vec2::NEG_Y),
+                Friction {
+                    coefficient: 0.0,
+                    combine_rule: CoefficientCombineRule::Average,
+                },
             ))
             .remove::<InitSpriteRigidBody>();
     }
@@ -131,31 +132,27 @@ pub fn init_sprite_physics(
             .insert((
                 match srb {
                     InitSpriteRigidBody::Dynamic => RigidBody::Dynamic,
-                    InitSpriteRigidBody::Kinematic => RigidBody::Kinematic,
-                    InitSpriteRigidBody::Static => RigidBody::Static,
+                    InitSpriteRigidBody::Kinematic => RigidBody::KinematicPositionBased,
+                    InitSpriteRigidBody::Static => RigidBody::Fixed,
                 },
                 Collider::compound(vec![(
-                    Position(Vec2::new(0.0, -4.0)),
-                    Rotation::default(),
+                    Vec2::new(0.0, -4.0),
+                    Rot::default(),
                     Collider::cuboid(64.0, 25.0),
                 )]),
-                CollisionLayers::new(
-                    [PhysicsLayers::Enemy],
-                    [
-                        PhysicsLayers::Player,
-                        PhysicsLayers::Ground,
-                        PhysicsLayers::Wall,
-                    ],
+                CollisionGroups::new(
+                    COLLISION_GROUP_ENEMY,
+                    COLLISION_GROUP_PLAYER | COLLISION_GROUP_GROUND | COLLISION_GROUP_WALL,
                 ),
                 LockedAxes::ROTATION_LOCKED,
-                Restitution::ZERO.with_combine_rule(CoefficientCombine::Min),
-                ExternalForce::ZERO,
-                Friction {
-                    dynamic_coefficient: 0.0,
-                    static_coefficient: 0.0,
-                    combine_rule: CoefficientCombine::Average,
+                Restitution {
+                    coefficient: 0.0,
+                    combine_rule: CoefficientCombineRule::Min,
                 },
-                RayCaster::new(Vec2::ZERO, Vec2::NEG_Y),
+                Friction {
+                    coefficient: 0.0,
+                    combine_rule: CoefficientCombineRule::Average,
+                },
             ))
             .remove::<InitSpriteRigidBody>();
     }
@@ -187,30 +184,18 @@ pub fn init_sprite_physics(
         //     Friction::default()
         // };
 
-        let collision_layers = match (ground, wall) {
-            (Some(_), _) => CollisionLayers::new(
-                [PhysicsLayers::Ground],
-                [
-                    PhysicsLayers::Player,
-                    PhysicsLayers::Enemy,
-                    PhysicsLayers::Projectile,
-                ],
+        let collision_groups = match (ground, wall) {
+            (Some(_), _) => CollisionGroups::new(
+                COLLISION_GROUP_GROUND,
+                COLLISION_GROUP_PLAYER | COLLISION_GROUP_ENEMY | COLLISION_GROUP_PROJECTILE,
             ),
-            (_, Some(_)) => CollisionLayers::new(
-                [PhysicsLayers::Wall],
-                [
-                    PhysicsLayers::Player,
-                    PhysicsLayers::Enemy,
-                    PhysicsLayers::Projectile,
-                ],
+            (_, Some(_)) => CollisionGroups::new(
+                COLLISION_GROUP_WALL,
+                COLLISION_GROUP_PLAYER | COLLISION_GROUP_ENEMY | COLLISION_GROUP_PROJECTILE,
             ),
-            _ => CollisionLayers::new(
-                [PhysicsLayers::Ground],
-                [
-                    PhysicsLayers::Player,
-                    PhysicsLayers::Enemy,
-                    PhysicsLayers::Projectile,
-                ],
+            _ => CollisionGroups::new(
+                COLLISION_GROUP_GROUND,
+                COLLISION_GROUP_PLAYER | COLLISION_GROUP_ENEMY | COLLISION_GROUP_PROJECTILE,
             ),
         };
 
@@ -219,38 +204,49 @@ pub fn init_sprite_physics(
             .insert((
                 match srb {
                     InitSpriteRigidBody::Dynamic => RigidBody::Dynamic,
-                    InitSpriteRigidBody::Kinematic => RigidBody::Kinematic,
-                    InitSpriteRigidBody::Static => RigidBody::Static,
+                    InitSpriteRigidBody::Kinematic => RigidBody::KinematicPositionBased,
+                    InitSpriteRigidBody::Static => RigidBody::Fixed,
                 },
                 collider,
-                collision_layers,
+                collision_groups,
                 LockedAxes::ROTATION_LOCKED,
-                Restitution::ZERO.with_combine_rule(CoefficientCombine::Min),
-                ExternalForce::ZERO,
+                Restitution {
+                    coefficient: 0.0,
+                    combine_rule: CoefficientCombineRule::Min,
+                },
             ))
             .remove::<InitSpriteRigidBody>();
     }
 }
 
 pub fn check_if_grounded(
-    player: &Query<(&RayHits, &CollidingEntities), With<Player>>,
-    grounds: &Query<Entity, With<Ground>>,
+    player_colliding_entities: Query<&CollidingEntities, With<Player>>,
+    player_position: Query<&GlobalTransform, With<Player>>,
+    ground_entities: Query<(Entity, &Collider), With<Ground>>,
+    rapier_context: Res<RapierContext>,
 ) -> bool {
-    let grounds = grounds.iter().collect::<Vec<Entity>>();
-    //screen_print!("check_if_ground grounds: {:#?}", grounds);
-    let (hits, coll_ents) = player.single();
-    // screen_print!(
-    //     "check_if_ground hits: {:#?}",
-    //     hits.iter().collect::<Vec<&RayHitData>>()
-    // );
+    let mut grounds: HashMap<Entity, &Collider> = HashMap::new();
+    for (entity, collider) in ground_entities.iter() {
+        grounds.insert(entity, collider);
+    }
 
-    for collision_entity in coll_ents.iter() {
-        if grounds.contains(collision_entity) {
+    let player_position = player_position.single().translation();
+
+    for colliding_entity in player_colliding_entities.single().iter() {
+        if grounds.contains_key(&colliding_entity) {
             // collision with ground. ensure that we are actually above it
-            for hit in hits.iter() {
-                if *collision_entity == hit.entity {
-                    return true;
-                }
+
+            let ray_pos = player_position.truncate();
+            let ray_dir = Vec2::new(0.0, -1.0);
+            let max_toi = 4.0;
+            let solid = true;
+            let filter = QueryFilter::default();
+
+            if rapier_context
+                .cast_ray(ray_pos, ray_dir, max_toi, solid, filter)
+                .is_some()
+            {
+                return true;
             }
         }
     }

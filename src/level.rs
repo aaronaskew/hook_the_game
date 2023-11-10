@@ -2,7 +2,7 @@ use crate::{loading::LevelAsset, physics::InitSpriteRigidBody, GameState};
 use bevy::prelude::*;
 //use bevy_debug_text_overlay::screen_print;
 use bevy_ecs_ldtk::prelude::*;
-use bevy_xpbd_2d::prelude::Friction;
+use bevy_rapier2d::prelude::Friction;
 
 pub struct LevelPlugin;
 

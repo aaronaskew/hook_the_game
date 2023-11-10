@@ -4,7 +4,7 @@ use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*, render::primitive
 use bevy_debug_text_overlay::{screen_print, OverlayPlugin};
 use bevy_inspector_egui::{quick::WorldInspectorPlugin, DefaultInspectorConfigPlugin};
 use bevy_kira_audio::{AudioInstance, AudioTween, PlaybackState};
-use bevy_xpbd_2d::prelude::*;
+use bevy_rapier2d::prelude::*;
 
 mod editor;
 
@@ -18,6 +18,7 @@ impl Plugin for DebugPlugin {
             // WorldInspectorPlugin::new(),
             editor::HookEditorPlugin,
             OverlayPlugin::default(),
+            RapierDebugRenderPlugin::default(),
         ))
         .add_systems(Update, Self::show_state)
         .add_systems(
@@ -35,30 +36,30 @@ impl DebugPlugin {
         _query: Query<(&Transform, Option<&Name>)>,
         _state: Res<State<GameState>>,
         _ortho: Query<&OrthographicProjection>,
-        player_physics: Query<
-            (
-                &Aabb,
-                &Collider,
-                &ColliderAabb,
-                &Position,
-                &LinearVelocity,
-                &ExternalForce,
-                &CollidingEntities,
-            ),
-            With<Player>,
-        >,
+        // player_physics: Query<
+        //     (
+        //         &Aabb,
+        //         &Collider,
+        //         &ColliderAabb,
+        //         &GlobalTransform,
+        //         &LinearVelocity,
+        //         &ExternalForce,
+        //         &CollidingEntities,
+        //     ),
+        //     With<Player>,
+        // >,
         time: Res<Time>,
     ) {
         let current_time = time.elapsed_seconds_f64();
         let at_interval = |t: f64| current_time % t < time.delta_seconds_f64();
 
         if at_interval(0.01) {
-            player_physics.iter().for_each(
-                |(aabb, coll, coll_aabb, pos, vel, force, colliding_ents)| {
-                    //screen_print!("cam scale {:?}", _ortho.single().scale);
-                    //screen_print!("pos {:?}", pos);
-                },
-            );
+            // player_physics.iter().for_each(
+            //     |(aabb, coll, coll_aabb, pos, vel, force, colliding_ents)| {
+            //         //screen_print!("cam scale {:?}", _ortho.single().scale);
+            //         //screen_print!("pos {:?}", pos);
+            //     },
+            // );
         }
     }
 
