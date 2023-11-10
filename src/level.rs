@@ -2,7 +2,6 @@ use crate::{loading::LevelAsset, physics::InitSpriteRigidBody, GameState};
 use bevy::prelude::*;
 //use bevy_debug_text_overlay::screen_print;
 use bevy_ecs_ldtk::prelude::*;
-use bevy_rapier2d::prelude::Friction;
 
 pub struct LevelPlugin;
 
@@ -57,7 +56,6 @@ pub struct Wall;
 pub struct ColliderTileBundle {
     pub name: Name,
     pub rigid_body: InitSpriteRigidBody,
-    pub friction: Friction,
 }
 
 #[derive(Clone, Debug, Default, Bundle, LdtkIntCell)]
@@ -80,12 +78,12 @@ impl From<IntGridCell> for ColliderTileBundle {
             2 => ColliderTileBundle {
                 name: Name::new("Ground"),
                 rigid_body: InitSpriteRigidBody::Static,
-                friction: Friction::new(0.1),
+                
             },
             3 => ColliderTileBundle {
                 name: Name::new("Wall"),
                 rigid_body: InitSpriteRigidBody::Static,
-                friction: Friction::new(0.),
+                
             },
             _ => ColliderTileBundle::default(),
         }

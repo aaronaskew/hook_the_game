@@ -97,32 +97,39 @@ fn move_player(
     grounds_query: Query<(Entity, &Collider), With<Ground>>,
     rapier_context: Res<RapierContext>,
 ) {
-    let (mut velocity, mut player) = player_velocity.single_mut();
+    if let Some((mut velocity, mut player)) = player_velocity.iter_mut().next() {
+        // handle moving
+        if actions.player_movement.is_some() {
+            let movement = Vec2::new(
+                actions.player_movement.unwrap().x * player.walk_speed,
+                actions.player_movement.unwrap().y * player.walk_speed,
+            );
 
-    // handle moving
-    if actions.player_movement.is_some() {
-        let movement = Vec2::new(
-            actions.player_movement.unwrap().x * player.walk_speed,
-            actions.player_movement.unwrap().y * player.walk_speed,
-        );
-
-        velocity.linvel.x = movement.x;
-    }
-
-    // handle jumping
-    let is_grounded = physics::check_if_grounded(player_collisions_query, player_position, grounds_query, rapier_context);
-    if player.is_jumping {
-        if is_grounded {
-            player.is_jumping = false;
+            velocity.linvel.x = movement.x;
         }
-    } else if actions.jump && is_grounded {
-        player.is_jumping = true;
-        velocity.linvel.y = player.jump_speed;
-    }
+
+        // handle jumping
+        let is_grounded = physics::check_if_grounded(
+            player_collisions_query,
+            player_position,
+            grounds_query,
+            rapier_context,
+        );
+        if player.is_jumping {
+            if is_grounded {
+                player.is_jumping = false;
+            }
+        } else if actions.jump && is_grounded {
+            player.is_jumping = true;
+            velocity.linvel.y = player.jump_speed;
+        }
 
     // screen_print!("is_grounded: {}", is_grounded);
     // screen_print!("is_jumping: {}", player.is_jumping);
     // screen_print!("is_grounded: {}", is_grounded);
+    } else {
+        panic!("Player should have Velocity.");
+    }
 }
 
 fn update_player_animation(

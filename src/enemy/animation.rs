@@ -104,7 +104,7 @@ pub fn process_actions(
     time: Res<Time>,
 ) {
     for (entity, mut velocity, mut state, mut enemy, position) in query.iter_mut() {
-        let target_delta:Vec2;
+        let target_delta: Vec2;
 
         if let Some(target) = enemy.target {
             target_delta = target.translation().truncate() - position.translation().truncate();
@@ -226,7 +226,7 @@ pub fn process_state_change(mut query: Query<(&mut Enemy, &EnemyState), Changed<
             EnemyState::LungeAttack => Some(EnemyAction::LungeAttack {
                 before_lunge_timer: Timer::from_seconds(1.0, TimerMode::Once),
                 after_lunge_timer: Timer::from_seconds(2.0, TimerMode::Once),
-                speed: 200.0,
+                speed: 100.0,
             }),
             EnemyState::SpewAttack => Some(EnemyAction::SpewAttack {
                 spew_timer: Timer::from_seconds(5.0, TimerMode::Once),

@@ -11,6 +11,12 @@ use bevy_rapier2d::prelude::*;
 
 pub const NEXT_STATE: GameState = GameState::Playing;
 
+pub const COLLISION_GROUP_PLAYER: Group = Group::GROUP_1;
+pub const COLLISION_GROUP_WALL: Group = Group::GROUP_2;
+pub const COLLISION_GROUP_GROUND: Group = Group::GROUP_3;
+pub const COLLISION_GROUP_PROJECTILE: Group = Group::GROUP_4;
+pub const COLLISION_GROUP_ENEMY: Group = Group::GROUP_5;
+
 // character is 32px tall, assume 2m in height, 1m = 16px
 // pub const GRAVITY: f32 = 9.8 * 16.0;
 // pub const GRAVITY: f32 = 700.0;
@@ -33,12 +39,6 @@ pub enum InitSpriteRigidBody {
     Static,
 }
 
-pub const COLLISION_GROUP_PLAYER: Group = Group::GROUP_1;
-pub const COLLISION_GROUP_WALL: Group = Group::GROUP_2;
-pub const COLLISION_GROUP_GROUND: Group = Group::GROUP_3;
-pub const COLLISION_GROUP_PROJECTILE: Group = Group::GROUP_4;
-pub const COLLISION_GROUP_ENEMY: Group = Group::GROUP_5;
-
 pub struct PhysicsPlugin;
 
 /// This plugin handles player related stuff like movement
@@ -58,8 +58,8 @@ impl Plugin for PhysicsPlugin {
 }
 
 fn collider_from_aabb(aabb: &Aabb) -> Collider {
-    let extents = aabb.half_extents * 2.0;
-    Collider::cuboid(extents.x, extents.y)
+    // let extents = aabb.half_extents * 2.0;
+    Collider::cuboid(aabb.half_extents.x, aabb.half_extents.y)
 }
 /// init physics based on sprite shape and InitSpriteRigidbody type
 pub fn init_sprite_physics(
@@ -92,6 +92,7 @@ pub fn init_sprite_physics(
                     InitSpriteRigidBody::Kinematic => RigidBody::KinematicPositionBased,
                     InitSpriteRigidBody::Static => RigidBody::Fixed,
                 },
+                Velocity::zero(),
                 Collider::cuboid(
                     player::PLAYER_COLLISION_SIZE.x / 2.0,
                     player::PLAYER_COLLISION_SIZE.y / 2.0,
@@ -138,12 +139,13 @@ pub fn init_sprite_physics(
                 Collider::compound(vec![(
                     Vec2::new(0.0, -4.0),
                     Rot::default(),
-                    Collider::cuboid(64.0, 25.0),
+                    Collider::cuboid(32.0, 12.5),
                 )]),
                 CollisionGroups::new(
                     COLLISION_GROUP_ENEMY,
                     COLLISION_GROUP_PLAYER | COLLISION_GROUP_GROUND | COLLISION_GROUP_WALL,
                 ),
+                Velocity::zero(),
                 LockedAxes::ROTATION_LOCKED,
                 Restitution {
                     coefficient: 0.0,
@@ -165,24 +167,16 @@ pub fn init_sprite_physics(
             collider = collider_from_aabb(aabb);
         } else {
             //if there is no Aabb component, assuming these are 32x32 sprites
-            collider = Collider::cuboid(32., 32.);
+            collider = Collider::cuboid(16., 16.);
         }
 
-        // let friction = if ground.is_some() {
-        //     Friction {
-        //         dynamic_coefficient: 0.1,
-        //         static_coefficient: 0.0,
-        //         combine_rule: CoefficientCombine::Average,
-        //     }
-        // } else if wall.is_some() {
-        //     Friction {
-        //         dynamic_coefficient: 0.0,
-        //         static_coefficient: 0.0,
-        //         combine_rule: CoefficientCombine::Average,
-        //     }
-        // } else {
-        //     Friction::default()
-        // };
+        let friction = if ground.is_some() {
+            Friction::new(1.0)
+        } else if wall.is_some() {
+            Friction::new(0.0)
+        } else {
+            Friction::default()
+        };
 
         let collision_groups = match (ground, wall) {
             (Some(_), _) => CollisionGroups::new(
@@ -210,6 +204,7 @@ pub fn init_sprite_physics(
                 collider,
                 collision_groups,
                 LockedAxes::ROTATION_LOCKED,
+                friction,
                 Restitution {
                     coefficient: 0.0,
                     combine_rule: CoefficientCombineRule::Min,
@@ -232,25 +227,26 @@ pub fn check_if_grounded(
 
     let player_position = player_position.single().translation();
 
-    for colliding_entity in player_colliding_entities.single().iter() {
-        if grounds.contains_key(&colliding_entity) {
-            // collision with ground. ensure that we are actually above it
+    if let Some(colliding_entities) = player_colliding_entities.iter().next() {
+        for colliding_entity in colliding_entities.iter() {
+            if grounds.contains_key(&colliding_entity) {
+                // collision with ground. ensure that we are actually above it
 
-            let ray_pos = player_position.truncate();
-            let ray_dir = Vec2::new(0.0, -1.0);
-            let max_toi = 4.0;
-            let solid = true;
-            let filter = QueryFilter::default();
+                let ray_pos = player_position.truncate();
+                let ray_dir = Vec2::new(0.0, -1.0);
+                let max_toi = 4.0;
+                let solid = true;
+                let filter = QueryFilter::default();
 
-            if rapier_context
-                .cast_ray(ray_pos, ray_dir, max_toi, solid, filter)
-                .is_some()
-            {
-                return true;
+                if rapier_context
+                    .cast_ray(ray_pos, ray_dir, max_toi, solid, filter)
+                    .is_some()
+                {
+                    return true;
+                }
             }
         }
     }
-
     // otherwise, not grounded
 
     false

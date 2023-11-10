@@ -16,6 +16,7 @@ pub struct ClockBundle {
     pub rigid_body: RigidBody,
     pub collider: Collider,
     pub collision_layers: CollisionGroups,
+    pub velocity: Velocity,
 }
 
 impl Default for ClockBundle {
@@ -23,13 +24,14 @@ impl Default for ClockBundle {
         Self {
             clock: Clock { lifetime: 5.0 },
             rigid_body: RigidBody::Dynamic,
-            collider: Collider::ball(9.0),
+            collider: Collider::ball(4.5),
             collision_layers: CollisionGroups::new(
                 physics::COLLISION_GROUP_PROJECTILE,
                 physics::COLLISION_GROUP_PLAYER
                     | physics::COLLISION_GROUP_GROUND
                     | physics::COLLISION_GROUP_WALL,
             ),
+            velocity: Velocity::zero(),
         }
     }
 }
@@ -72,13 +74,13 @@ pub fn check_collisions_with_player(
 
 pub fn spew_clocks(
     mut commands: Commands,
-    mut query: Query<&mut SpewClocks>,
+    mut query: Query<(Entity, &mut SpewClocks)>,
     time: Res<Time>,
     clock: Res<ClockTextureAtlasAsset>,
     ticktock: Res<AlarmSoundEffect>,
     mut audio_assets: ResMut<Assets<AudioInstance>>,
 ) {
-    for mut spew in query.iter_mut() {
+    for (entity, mut spew) in query.iter_mut() {
         let current_time = time.elapsed_seconds_f64();
         let at_interval = |t: f64| current_time % t < time.delta_seconds_f64();
 
@@ -92,6 +94,7 @@ pub fn spew_clocks(
         if at_interval(spew.rate_interval) {
             commands
                 .spawn(ClockBundle::default())
+                .set_parent(entity)
                 .insert(Transform {
                     translation: spew.source_position.extend(0.0),
                     ..default()
