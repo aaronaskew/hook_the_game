@@ -75,7 +75,6 @@ web-sys = { version = "0.3.64", features = [
     "console",
 ] }
 bevy-inspector-egui = "0.20.0"
-#bevy_rapier2d = { version = "0.2.0", features = ["debug-plugin"] }
 bevy-debug-text-overlay = "6.0.0"
 bevy_ecs_ldtk = "0.8.0"
 bevy_editor_pls = "0.5.0"
