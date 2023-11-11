@@ -17,6 +17,10 @@ pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(16.0))
+            .insert_resource(RapierConfiguration {
+                gravity: Vec2::new(0.0, -9.8 * 16.0),
+                ..default()
+            })
             .register_type::<HashSet<Entity>>()
             .add_systems(
                 Update,
@@ -95,11 +99,11 @@ pub mod bundles {
                     player::PLAYER_COLLISION_SIZE.x / 2.0,
                     player::PLAYER_COLLISION_SIZE.y / 2.0,
                 ),
-                rigid_body: RigidBody::Fixed,
+                rigid_body: RigidBody::Dynamic,
                 collision_groups: CollisionGroups::new(PLAYER, ENEMY | GROUND | WALL | PROJECTILE),
                 velocity: Velocity::zero(),
                 locked_axes: LockedAxes::ROTATION_LOCKED,
-                friction: Friction::new(1.0),
+                friction: Friction::new(0.0),
                 restitution: Restitution::new(0.0),
             }
         }
@@ -124,7 +128,7 @@ pub mod bundles {
                 collision_groups: CollisionGroups::new(ENEMY, PLAYER | GROUND | WALL),
                 velocity: Velocity::zero(),
                 locked_axes: LockedAxes::ROTATION_LOCKED,
-                friction: Friction::new(1.0),
+                friction: Friction::new(0.0),
                 restitution: Restitution::new(0.0),
             }
         }
@@ -153,7 +157,6 @@ pub mod bundles {
     pub struct FixedTilePhysicsBundle {
         pub collider: Collider,
         pub rigid_body: RigidBody,
-        pub friction: Friction,
         pub restitution: Restitution,
     }
 
@@ -162,10 +165,6 @@ pub mod bundles {
             Self {
                 collider: Collider::cuboid(16., 16.),
                 rigid_body: RigidBody::Fixed,
-                friction: Friction {
-                    coefficient: 1.0,
-                    combine_rule: CoefficientCombineRule::Average,
-                },
                 restitution: Restitution {
                     coefficient: 0.0,
                     combine_rule: CoefficientCombineRule::Average,
@@ -178,6 +177,7 @@ pub mod bundles {
     pub struct GroundPhysicsBundle {
         pub tile_physics: FixedTilePhysicsBundle,
         pub collision_groups: CollisionGroups,
+        friction: Friction,
     }
 
     impl Default for GroundPhysicsBundle {
@@ -185,6 +185,10 @@ pub mod bundles {
             Self {
                 collision_groups: CollisionGroups::new(GROUND, PLAYER | ENEMY | PROJECTILE),
                 tile_physics: FixedTilePhysicsBundle::default(),
+                friction: Friction {
+                    coefficient: 13.0,
+                    combine_rule: CoefficientCombineRule::Average,
+                },
             }
         }
     }

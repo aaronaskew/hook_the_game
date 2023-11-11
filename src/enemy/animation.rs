@@ -176,7 +176,7 @@ pub fn process_actions(
 
                     let velocity = Vec2::new(vx, 0.0);
 
-                    info!("clock velocity: {:?}", velocity);
+                    // info!("clock velocity: {:?}", velocity);
 
                     commands.entity(entity).insert(SpewClocks {
                         source_position: Vec2::new(
@@ -222,7 +222,7 @@ pub fn process_state_change(mut query: Query<(&mut Enemy, &EnemyState), Changed<
                 direction_timer: Timer::from_seconds(3.0, TimerMode::Repeating),
                 speed: 120.0,
             }),
-            EnemyState::Pursue => Some(EnemyAction::Pursue { speed: 200.0 }),
+            EnemyState::Pursue => Some(EnemyAction::Pursue { speed: 140.0 }),
             EnemyState::LungeAttack => Some(EnemyAction::LungeAttack {
                 before_lunge_timer: Timer::from_seconds(1.0, TimerMode::Once),
                 after_lunge_timer: Timer::from_seconds(2.0, TimerMode::Once),
@@ -231,8 +231,8 @@ pub fn process_state_change(mut query: Query<(&mut Enemy, &EnemyState), Changed<
             EnemyState::SpewAttack => Some(EnemyAction::SpewAttack {
                 spew_timer: Timer::from_seconds(5.0, TimerMode::Once),
                 spew_rate: 1.0,
-                spew_min_velocity: 200.0,
-                spew_max_velocity: 200.0,
+                spew_min_velocity: 100.0,
+                spew_max_velocity: 100.0,
             }),
         }
     }

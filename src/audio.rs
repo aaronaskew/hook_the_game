@@ -101,12 +101,13 @@ fn attenuate_ticktock(
 
     distances.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-    let shortest_distance = distances[0];
+    if let Some(shortest_distance) = distances.first() {
+        let volume =
+            ((MAX_DISTANCE - shortest_distance) / MAX_DISTANCE).clamp(0.0, 1.0) * MAX_VOLUME;
 
-    let volume = ((MAX_DISTANCE - shortest_distance) / MAX_DISTANCE).clamp(0.0, 1.0) * MAX_VOLUME;
-
-    if let Some(instance) = audio_assets.get_mut(&ticktock.0) {
-        instance.set_volume(volume as f64, AudioTween::default());
+        if let Some(instance) = audio_assets.get_mut(&ticktock.0) {
+            instance.set_volume(volume as f64, AudioTween::default());
+        }
     }
 }
 
