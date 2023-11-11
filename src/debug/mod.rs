@@ -2,7 +2,6 @@
 use crate::{audio::MainMusicLoop, player::Player, *};
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*, render::primitives::Aabb};
 use bevy_debug_text_overlay::{screen_print, OverlayPlugin};
-use bevy_inspector_egui::{quick::WorldInspectorPlugin, DefaultInspectorConfigPlugin};
 use bevy_kira_audio::{AudioInstance, AudioTween, PlaybackState};
 use bevy_rapier2d::prelude::*;
 
@@ -15,7 +14,6 @@ impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             // FrameTimeDiagnosticsPlugin,
-            // WorldInspectorPlugin::new(),
             editor::HookEditorPlugin,
             OverlayPlugin::default(),
             RapierDebugRenderPlugin::default(),
@@ -32,34 +30,37 @@ impl Plugin for DebugPlugin {
 }
 
 impl DebugPlugin {
-    fn player_info(
+    
+     fn player_info(
         _query: Query<(&Transform, Option<&Name>)>,
         _state: Res<State<GameState>>,
         _ortho: Query<&OrthographicProjection>,
-        // player_physics: Query<
-        //     (
-        //         &Aabb,
-        //         &Collider,
-        //         &ColliderAabb,
-        //         &GlobalTransform,
-        //         &LinearVelocity,
-        //         &ExternalForce,
-        //         &CollidingEntities,
-        //     ),
-        //     With<Player>,
-        // >,
+        player_physics: Query<
+            (&Collider, &GlobalTransform, &Velocity, &CollidingEntities),
+            With<Player>,
+        >,
         time: Res<Time>,
     ) {
         let current_time = time.elapsed_seconds_f64();
         let at_interval = |t: f64| current_time % t < time.delta_seconds_f64();
 
         if at_interval(0.01) {
-            // player_physics.iter().for_each(
-            //     |(aabb, coll, coll_aabb, pos, vel, force, colliding_ents)| {
-            //         //screen_print!("cam scale {:?}", _ortho.single().scale);
-            //         //screen_print!("pos {:?}", pos);
-            //     },
-            // );
+            player_physics
+                .iter()
+                .for_each(|(coll, pos, vel, colliding_entities)| {
+                    
+                    //detect collisions with player
+
+                    
+                    
+                    //screen_print!("cam scale {:?}", _ortho.single().scale);
+                    //screen_print!("pos {:?}", pos);
+                    info!("player colliding entities len: {}", colliding_entities.len());
+                    info!("=========================");
+                    colliding_entities.iter().for_each(|e| {
+                        info!("{:?}", e);
+                    });
+                });
         }
     }
 
