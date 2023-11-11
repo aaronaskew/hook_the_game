@@ -1,43 +1,14 @@
 use std::collections::HashMap;
 
 use crate::{
-    enemy::Enemy,
-    level::{Ground, Wall},
+    level::Ground,
     player::{self, Player},
     GameState,
 };
-use bevy::{prelude::*, render::primitives::Aabb, utils::HashSet};
+use bevy::{prelude::*, utils::HashSet};
 use bevy_rapier2d::prelude::*;
 
 pub const NEXT_STATE: GameState = GameState::Playing;
-
-pub const COLLISION_GROUP_PLAYER: Group = Group::GROUP_1;
-pub const COLLISION_GROUP_WALL: Group = Group::GROUP_2;
-pub const COLLISION_GROUP_GROUND: Group = Group::GROUP_3;
-pub const COLLISION_GROUP_PROJECTILE: Group = Group::GROUP_4;
-pub const COLLISION_GROUP_ENEMY: Group = Group::GROUP_5;
-
-// character is 32px tall, assume 2m in height, 1m = 16px
-// pub const GRAVITY: f32 = 9.8 * 16.0;
-// pub const GRAVITY: f32 = 700.0;
-
-// #[derive(Reflect, Resource, Default, InspectorOptions)]
-// #[reflect(Resource, InspectorOptions)]
-// pub struct PhysicsConstants {
-//     pub walk_speed: f32,
-//     pub jump_speed: f32,
-// }
-
-/// A component that tells us to initialize the physics on this entity according
-/// to the type and shape of the sprite
-#[derive(Component, Clone, Debug, Default)]
-#[allow(dead_code)]
-pub enum InitSpriteRigidBody {
-    Dynamic,
-    Kinematic,
-    #[default]
-    Static,
-}
 
 pub struct PhysicsPlugin;
 
@@ -47,170 +18,10 @@ impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(16.0))
             .register_type::<HashSet<Entity>>()
-            .add_systems(OnEnter(GameState::InitializingPhysics), init_sprite_physics)
             .add_systems(
                 Update,
-                next_state_after_physics_settle
-                    .run_if(in_state(GameState::InitializingPhysics))
-                    .after(init_sprite_physics),
+                next_state_after_physics_settle.run_if(in_state(GameState::InitializingPhysics)),
             );
-    }
-}
-
-fn collider_from_aabb(aabb: &Aabb) -> Collider {
-    // let extents = aabb.half_extents * 2.0;
-    Collider::cuboid(aabb.half_extents.x, aabb.half_extents.y)
-}
-/// init physics based on sprite shape and InitSpriteRigidbody type
-pub fn init_sprite_physics(
-    mut commands: Commands,
-    non_living: Query<
-        (
-            Entity,
-            Option<&Aabb>,
-            &InitSpriteRigidBody,
-            Option<&Ground>,
-            Option<&Wall>,
-        ),
-        (Without<Player>, Without<Enemy>),
-    >,
-    player: Query<(Entity, &InitSpriteRigidBody), With<Player>>,
-    enemy: Query<(Entity, &InitSpriteRigidBody), With<Enemy>>,
-) {
-    console_log!(
-        "init_sprite_physics: non-player sprites: {}",
-        non_living.iter().len()
-    );
-
-    // set up player entities using the player.size for the collider
-    for (e, srb) in player.iter() {
-        commands
-            .entity(e)
-            .insert((
-                match srb {
-                    InitSpriteRigidBody::Dynamic => RigidBody::Dynamic,
-                    InitSpriteRigidBody::Kinematic => RigidBody::KinematicPositionBased,
-                    InitSpriteRigidBody::Static => RigidBody::Fixed,
-                },
-                Velocity::zero(),
-                Collider::cuboid(
-                    player::PLAYER_COLLISION_SIZE.x / 2.0,
-                    player::PLAYER_COLLISION_SIZE.y / 2.0,
-                ),
-                CollisionGroups::new(
-                    COLLISION_GROUP_PLAYER,
-                    COLLISION_GROUP_ENEMY
-                        | COLLISION_GROUP_GROUND
-                        | COLLISION_GROUP_WALL
-                        | COLLISION_GROUP_PROJECTILE,
-                ),
-                // CollisionGroups::new(
-                //     [COLLISION_GROUP_Player],
-                //     [
-                //         COLLISION_GROUP_Enemy,
-                //         COLLISION_GROUP_Ground,
-                //         COLLISION_GROUP_Wall,
-                //         COLLISION_GROUP_Projectile,
-                //     ],
-                // ),
-                LockedAxes::ROTATION_LOCKED,
-                Restitution {
-                    coefficient: 0.0,
-                    combine_rule: CoefficientCombineRule::Min,
-                },
-                Friction {
-                    coefficient: 0.0,
-                    combine_rule: CoefficientCombineRule::Average,
-                },
-            ))
-            .remove::<InitSpriteRigidBody>();
-    }
-
-    // set up enemy entities
-    for (e, srb) in enemy.iter() {
-        commands
-            .entity(e)
-            .insert((
-                match srb {
-                    InitSpriteRigidBody::Dynamic => RigidBody::Dynamic,
-                    InitSpriteRigidBody::Kinematic => RigidBody::KinematicPositionBased,
-                    InitSpriteRigidBody::Static => RigidBody::Fixed,
-                },
-                Collider::compound(vec![(
-                    Vec2::new(0.0, -4.0),
-                    Rot::default(),
-                    Collider::cuboid(32.0, 12.5),
-                )]),
-                CollisionGroups::new(
-                    COLLISION_GROUP_ENEMY,
-                    COLLISION_GROUP_PLAYER | COLLISION_GROUP_GROUND | COLLISION_GROUP_WALL,
-                ),
-                Velocity::zero(),
-                LockedAxes::ROTATION_LOCKED,
-                Restitution {
-                    coefficient: 0.0,
-                    combine_rule: CoefficientCombineRule::Min,
-                },
-                Friction {
-                    coefficient: 0.0,
-                    combine_rule: CoefficientCombineRule::Average,
-                },
-            ))
-            .remove::<InitSpriteRigidBody>();
-    }
-
-    // set up non-player entities, using the Aabb bounds of the sprite for the collider
-    for (e, aabb, srb, ground, wall) in non_living.iter() {
-        let collider;
-
-        if let Some(aabb) = aabb {
-            collider = collider_from_aabb(aabb);
-        } else {
-            //if there is no Aabb component, assuming these are 32x32 sprites
-            collider = Collider::cuboid(16., 16.);
-        }
-
-        let friction = if ground.is_some() {
-            Friction::new(1.0)
-        } else if wall.is_some() {
-            Friction::new(0.0)
-        } else {
-            Friction::default()
-        };
-
-        let collision_groups = match (ground, wall) {
-            (Some(_), _) => CollisionGroups::new(
-                COLLISION_GROUP_GROUND,
-                COLLISION_GROUP_PLAYER | COLLISION_GROUP_ENEMY | COLLISION_GROUP_PROJECTILE,
-            ),
-            (_, Some(_)) => CollisionGroups::new(
-                COLLISION_GROUP_WALL,
-                COLLISION_GROUP_PLAYER | COLLISION_GROUP_ENEMY | COLLISION_GROUP_PROJECTILE,
-            ),
-            _ => CollisionGroups::new(
-                COLLISION_GROUP_GROUND,
-                COLLISION_GROUP_PLAYER | COLLISION_GROUP_ENEMY | COLLISION_GROUP_PROJECTILE,
-            ),
-        };
-
-        commands
-            .entity(e)
-            .insert((
-                match srb {
-                    InitSpriteRigidBody::Dynamic => RigidBody::Dynamic,
-                    InitSpriteRigidBody::Kinematic => RigidBody::KinematicPositionBased,
-                    InitSpriteRigidBody::Static => RigidBody::Fixed,
-                },
-                collider,
-                collision_groups,
-                LockedAxes::ROTATION_LOCKED,
-                friction,
-                Restitution {
-                    coefficient: 0.0,
-                    combine_rule: CoefficientCombineRule::Min,
-                },
-            ))
-            .remove::<InitSpriteRigidBody>();
     }
 }
 
@@ -260,4 +71,146 @@ pub fn next_state_after_physics_settle(
     if not_sleeping_q.iter().len() == 0 {
         state.set(NEXT_STATE);
     }
+}
+
+/// These are component bundles for physics-related components
+pub mod bundles {
+    use super::{collision_groups::*, *};
+
+    #[derive(Clone, Debug, Bundle)]
+    pub struct PlayerPhysicsBundle {
+        pub collider: Collider,
+        pub rigid_body: RigidBody,
+        pub collision_groups: CollisionGroups,
+        pub velocity: Velocity,
+        pub locked_axes: LockedAxes,
+        friction: Friction,
+        restitution: Restitution,
+    }
+
+    impl Default for PlayerPhysicsBundle {
+        fn default() -> Self {
+            Self {
+                collider: Collider::cuboid(
+                    player::PLAYER_COLLISION_SIZE.x / 2.0,
+                    player::PLAYER_COLLISION_SIZE.y / 2.0,
+                ),
+                rigid_body: RigidBody::Fixed,
+                collision_groups: CollisionGroups::new(PLAYER, ENEMY | GROUND | WALL | PROJECTILE),
+                velocity: Velocity::zero(),
+                locked_axes: LockedAxes::ROTATION_LOCKED,
+                friction: Friction::new(1.0),
+                restitution: Restitution::new(0.0),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Bundle)]
+    pub struct EnemyPhysicsBundle {
+        pub collider: Collider,
+        pub rigid_body: RigidBody,
+        pub collision_groups: CollisionGroups,
+        pub velocity: Velocity,
+        pub locked_axes: LockedAxes,
+        friction: Friction,
+        restitution: Restitution,
+    }
+
+    impl Default for EnemyPhysicsBundle {
+        fn default() -> Self {
+            Self {
+                collider: Collider::cuboid(32.0, 12.5),
+                rigid_body: RigidBody::Dynamic,
+                collision_groups: CollisionGroups::new(ENEMY, PLAYER | GROUND | WALL),
+                velocity: Velocity::zero(),
+                locked_axes: LockedAxes::ROTATION_LOCKED,
+                friction: Friction::new(1.0),
+                restitution: Restitution::new(0.0),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Bundle)]
+    pub struct ClockPhysicsBundle {
+        pub rigid_body: RigidBody,
+        pub collider: Collider,
+        pub collision_groups: CollisionGroups,
+        pub velocity: Velocity,
+    }
+
+    impl Default for ClockPhysicsBundle {
+        fn default() -> Self {
+            Self {
+                rigid_body: RigidBody::Dynamic,
+                collider: Collider::ball(4.5),
+                collision_groups: CollisionGroups::new(PROJECTILE, PLAYER | GROUND | WALL),
+                velocity: Velocity::zero(),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Bundle)]
+    pub struct FixedTilePhysicsBundle {
+        pub collider: Collider,
+        pub rigid_body: RigidBody,
+        pub friction: Friction,
+        pub restitution: Restitution,
+    }
+
+    impl Default for FixedTilePhysicsBundle {
+        fn default() -> Self {
+            Self {
+                collider: Collider::cuboid(16., 16.),
+                rigid_body: RigidBody::Fixed,
+                friction: Friction {
+                    coefficient: 1.0,
+                    combine_rule: CoefficientCombineRule::Average,
+                },
+                restitution: Restitution {
+                    coefficient: 0.0,
+                    combine_rule: CoefficientCombineRule::Average,
+                },
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Bundle)]
+    pub struct GroundPhysicsBundle {
+        pub tile_physics: FixedTilePhysicsBundle,
+        pub collision_groups: CollisionGroups,
+    }
+
+    impl Default for GroundPhysicsBundle {
+        fn default() -> Self {
+            Self {
+                collision_groups: CollisionGroups::new(GROUND, PLAYER | ENEMY | PROJECTILE),
+                tile_physics: FixedTilePhysicsBundle::default(),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Bundle)]
+    pub struct WallPhysicsBundle {
+        pub tile_physics: FixedTilePhysicsBundle,
+        pub collision_groups: CollisionGroups,
+    }
+
+    impl Default for WallPhysicsBundle {
+        fn default() -> Self {
+            Self {
+                collision_groups: CollisionGroups::new(GROUND, PLAYER | ENEMY | PROJECTILE),
+                tile_physics: FixedTilePhysicsBundle::default(),
+            }
+        }
+    }
+}
+
+mod collision_groups {
+    use super::*;
+
+    pub const PLAYER: Group = Group::GROUP_1;
+    pub const WALL: Group = Group::GROUP_2;
+    pub const GROUND: Group = Group::GROUP_3;
+    pub const PROJECTILE: Group = Group::GROUP_4;
+    pub const ENEMY: Group = Group::GROUP_5;
 }

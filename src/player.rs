@@ -83,7 +83,7 @@ fn initialize_player(
             },
         ))
         .insert(Name::new("player"))
-        .insert(physics::InitSpriteRigidBody::Dynamic);
+        .insert(physics::bundles::PlayerPhysicsBundle::default());
 
     // After initializing the player, we need to setup the physics
     state.set(GameState::InitializingPhysics);

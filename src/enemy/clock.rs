@@ -13,25 +13,15 @@ pub struct Clock {
 #[derive(Bundle)]
 pub struct ClockBundle {
     pub clock: Clock,
-    pub rigid_body: RigidBody,
-    pub collider: Collider,
-    pub collision_layers: CollisionGroups,
-    pub velocity: Velocity,
+    pub physics: physics::bundles::ClockPhysicsBundle,
 }
 
 impl Default for ClockBundle {
     fn default() -> Self {
         Self {
             clock: Clock { lifetime: 5.0 },
-            rigid_body: RigidBody::Dynamic,
-            collider: Collider::ball(4.5),
-            collision_layers: CollisionGroups::new(
-                physics::COLLISION_GROUP_PROJECTILE,
-                physics::COLLISION_GROUP_PLAYER
-                    | physics::COLLISION_GROUP_GROUND
-                    | physics::COLLISION_GROUP_WALL,
-            ),
-            velocity: Velocity::zero(),
+            physics: physics::bundles::ClockPhysicsBundle::default(),
+            
         }
     }
 }

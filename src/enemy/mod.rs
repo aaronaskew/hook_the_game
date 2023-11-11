@@ -137,7 +137,7 @@ fn initialize_enemies(
             ))
             .insert(Name::new("enemy"))
             .insert(EnemyState::Patrol)
-            .insert(physics::InitSpriteRigidBody::Dynamic);
+            .insert(physics::bundles::EnemyPhysicsBundle::default());
     }
 }
 
