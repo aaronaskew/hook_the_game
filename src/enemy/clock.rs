@@ -1,9 +1,12 @@
 use bevy::prelude::*;
 use bevy_kira_audio::{AudioInstance, AudioTween};
-use bevy_rapier2d::prelude::*;
+use bevy_xpbd_2d::prelude::*;
 use rand::random;
 
-use crate::{audio::AlarmSoundEffect, loading::ClockTextureAtlasAsset, physics, player::Player};
+use crate::{
+    audio::AlarmSoundEffect, loading::ClockTextureAtlasAsset, physics::PhysicsLayers,
+    player::Player,
+};
 
 #[derive(Component)]
 pub struct Clock {
@@ -13,15 +16,25 @@ pub struct Clock {
 #[derive(Bundle)]
 pub struct ClockBundle {
     pub clock: Clock,
-    pub physics: physics::bundles::ClockPhysicsBundle,
+    pub rigid_body: RigidBody,
+    pub collider: Collider,
+    pub collision_layers: CollisionLayers,
 }
 
 impl Default for ClockBundle {
     fn default() -> Self {
         Self {
             clock: Clock { lifetime: 5.0 },
-            physics: physics::bundles::ClockPhysicsBundle::default(),
-            
+            rigid_body: RigidBody::Dynamic,
+            collider: Collider::ball(9.0),
+            collision_layers: CollisionLayers::new(
+                [PhysicsLayers::Projectile],
+                [
+                    PhysicsLayers::Player,
+                    PhysicsLayers::Ground,
+                    PhysicsLayers::Wall,
+                ],
+            ),
         }
     }
 }
@@ -55,7 +68,7 @@ pub fn check_collisions_with_player(
 
     for entities in query.iter_mut() {
         for entity in entities.iter() {
-            if entity == player_entity {
+            if entity == &player_entity {
                 player.is_alive = false;
             }
         }
@@ -64,13 +77,13 @@ pub fn check_collisions_with_player(
 
 pub fn spew_clocks(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut SpewClocks)>,
+    mut query: Query<&mut SpewClocks>,
     time: Res<Time>,
     clock: Res<ClockTextureAtlasAsset>,
     ticktock: Res<AlarmSoundEffect>,
     mut audio_assets: ResMut<Assets<AudioInstance>>,
 ) {
-    for (entity, mut spew) in query.iter_mut() {
+    for mut spew in query.iter_mut() {
         let current_time = time.elapsed_seconds_f64();
         let at_interval = |t: f64| current_time % t < time.delta_seconds_f64();
 
@@ -84,15 +97,8 @@ pub fn spew_clocks(
         if at_interval(spew.rate_interval) {
             commands
                 .spawn(ClockBundle::default())
-                .set_parent(entity)
-                .insert(Transform {
-                    translation: spew.source_position.extend(0.0),
-                    ..default()
-                })
-                .insert(Velocity {
-                    linvel: spew.velocity,
-                    ..default()
-                })
+                .insert(Position(spew.source_position))
+                .insert(LinearVelocity(spew.velocity))
                 .insert(SpriteSheetBundle {
                     texture_atlas: clock.clock_atlas.clone(),
                     sprite: TextureAtlasSprite {

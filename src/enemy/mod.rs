@@ -4,7 +4,7 @@ use crate::player::Player;
 use crate::GameState;
 use crate::*;
 use bevy_ecs_ldtk::prelude::*;
-use bevy_rapier2d::prelude::*;
+use bevy_xpbd_2d::prelude::*;
 use state::EnemyState;
 
 mod animation;
@@ -81,7 +81,7 @@ pub struct Enemy {
     pub patrol_range: f32,
     pub attack_range: f32,
     pub is_grounded: bool,
-    pub target: Option<GlobalTransform>,
+    pub target: Option<Position>,
     pub current_action: EnemyAction,
     pub next_action: Option<EnemyAction>,
 }
@@ -137,7 +137,7 @@ fn initialize_enemies(
             ))
             .insert(Name::new("enemy"))
             .insert(EnemyState::Patrol)
-            .insert(physics::bundles::EnemyPhysicsBundle::default());
+            .insert(physics::InitSpriteRigidBody::Dynamic);
     }
 }
 
@@ -151,7 +151,7 @@ pub fn check_collisions_with_player(
 
     for colliding_entities in query.iter() {
         for entity in colliding_entities.iter() {
-            if entity == player_entity {
+            if entity == &player_entity {
                 player.is_alive = false;
             }
         }

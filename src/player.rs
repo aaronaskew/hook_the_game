@@ -3,7 +3,7 @@ use crate::GameState;
 use crate::*;
 use crate::{actions::Actions, level::Ground};
 use bevy_ecs_ldtk::prelude::*;
-use bevy_rapier2d::prelude::*;
+use bevy_xpbd_2d::prelude::{CollidingEntities, LinearVelocity, RayHits};
 
 pub const PLAYER_COLLISION_SIZE: Vec2 = Vec2 { x: 10.0, y: 32.0 };
 pub const WALK_SPEED: f32 = 150.;
@@ -83,7 +83,7 @@ fn initialize_player(
             },
         ))
         .insert(Name::new("player"))
-        .insert(physics::bundles::PlayerPhysicsBundle::default());
+        .insert(physics::InitSpriteRigidBody::Dynamic);
 
     // After initializing the player, we need to setup the physics
     state.set(GameState::InitializingPhysics);
@@ -91,45 +91,36 @@ fn initialize_player(
 
 fn move_player(
     actions: Res<Actions>,
-    mut player_velocity: Query<(&mut Velocity, &mut Player)>,
-    player_collisions_query: Query<&CollidingEntities, With<Player>>,
-    player_position: Query<&GlobalTransform, With<Player>>,
-    grounds_query: Query<(Entity, &Collider), With<Ground>>,
-    rapier_context: Res<RapierContext>,
+    mut player_velocity: Query<(&mut LinearVelocity, &mut Player)>,
+    player_collisions_query: Query<(&RayHits, &CollidingEntities), With<Player>>,
+    grounds_query: Query<Entity, With<Ground>>,
 ) {
-    if let Some((mut velocity, mut player)) = player_velocity.iter_mut().next() {
-        // handle moving
-        if actions.player_movement.is_some() {
-            let movement = Vec2::new(
-                actions.player_movement.unwrap().x * player.walk_speed,
-                actions.player_movement.unwrap().y * player.walk_speed,
-            );
+    let (mut velocity, mut player) = player_velocity.single_mut();
 
-            velocity.linvel.x = movement.x;
-        }
-
-        // handle jumping
-        let is_grounded = physics::check_if_grounded(
-            player_collisions_query,
-            player_position,
-            grounds_query,
-            rapier_context,
+    // handle moving
+    if actions.player_movement.is_some() {
+        let movement = Vec2::new(
+            actions.player_movement.unwrap().x * player.walk_speed,
+            actions.player_movement.unwrap().y * player.walk_speed,
         );
-        if player.is_jumping {
-            if is_grounded {
-                player.is_jumping = false;
-            }
-        } else if actions.jump && is_grounded {
-            player.is_jumping = true;
-            velocity.linvel.y = player.jump_speed;
+
+        velocity.x = movement.x;
+    }
+
+    // handle jumping
+    let is_grounded = physics::check_if_grounded(&player_collisions_query, &grounds_query);
+    if player.is_jumping {
+        if is_grounded {
+            player.is_jumping = false;
         }
+    } else if actions.jump && is_grounded {
+        player.is_jumping = true;
+        velocity.y = player.jump_speed;
+    }
 
     // screen_print!("is_grounded: {}", is_grounded);
     // screen_print!("is_jumping: {}", player.is_jumping);
     // screen_print!("is_grounded: {}", is_grounded);
-    } else {
-        panic!("Player should have Velocity.");
-    }
 }
 
 fn update_player_animation(

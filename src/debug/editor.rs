@@ -3,10 +3,10 @@ use std::default;
 use bevy::{
     asset::diagnostic::AssetCountDiagnosticsPlugin,
     diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin},
-    prelude::*,
+    prelude::{Plugin, *},
 };
 use bevy_editor_pls::prelude::*;
-use bevy_inspector_egui::egui::ahash::HashSet;
+use bevy_inspector_egui::DefaultInspectorConfigPlugin;
 
 use crate::loading::AudioAssets;
 

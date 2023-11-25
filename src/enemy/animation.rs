@@ -96,18 +96,18 @@ pub fn process_actions(
     mut commands: Commands,
     mut query: Query<(
         Entity,
-        &mut Velocity,
+        &mut LinearVelocity,
         &mut EnemyState,
         &mut Enemy,
-        &GlobalTransform,
+        &Position,
     )>,
     time: Res<Time>,
 ) {
     for (entity, mut velocity, mut state, mut enemy, position) in query.iter_mut() {
-        let target_delta: Vec2;
+        let target_delta;
 
         if let Some(target) = enemy.target {
-            target_delta = target.translation().truncate() - position.translation().truncate();
+            target_delta = target.0 - position.0;
         } else {
             target_delta = Vec2::ZERO;
         }
@@ -130,10 +130,10 @@ pub fn process_actions(
                 if direction_timer.just_finished() {
                     enemy.facing_left = !enemy.facing_left;
                 }
-                velocity.linvel.x = if enemy.facing_left { -speed } else { speed };
+                velocity.x = if enemy.facing_left { -speed } else { speed };
             }
             EnemyAction::Pursue { speed } => {
-                velocity.linvel.x = if target_delta.x > 0.0 { speed } else { -speed };
+                velocity.x = if target_delta.x > 0.0 { speed } else { -speed };
             }
             EnemyAction::LungeAttack {
                 ref mut before_lunge_timer,
@@ -144,8 +144,8 @@ pub fn process_actions(
 
                 if before_lunge_timer.just_finished() {
                     //lunge
-                    velocity.linvel.x = if enemy.facing_left { -speed } else { speed };
-                    velocity.linvel.y = speed;
+                    velocity.x = if enemy.facing_left { -speed } else { speed };
+                    velocity.y = speed;
                 } else if before_lunge_timer.finished() && is_grounded {
                     after_lunge_timer.tick(time.delta());
 
@@ -176,12 +176,12 @@ pub fn process_actions(
 
                     let velocity = Vec2::new(vx, 0.0);
 
-                    // info!("clock velocity: {:?}", velocity);
+                    info!("clock velocity: {:?}", velocity);
 
                     commands.entity(entity).insert(SpewClocks {
                         source_position: Vec2::new(
-                            position.translation().x + if enemy.facing_left { -10.0 } else { 10.0 },
-                            position.translation().y,
+                            position.x + if enemy.facing_left { -10.0 } else { 10.0 },
+                            position.y,
                         ),
 
                         velocity,
@@ -193,7 +193,7 @@ pub fn process_actions(
         }
 
         // set direction
-        match (*state, velocity.linvel.x, target_delta) {
+        match (*state, velocity.x, target_delta) {
             (_, vx, _) if vx > 0.0 => {
                 enemy.facing_left = false;
             }
@@ -222,17 +222,17 @@ pub fn process_state_change(mut query: Query<(&mut Enemy, &EnemyState), Changed<
                 direction_timer: Timer::from_seconds(3.0, TimerMode::Repeating),
                 speed: 120.0,
             }),
-            EnemyState::Pursue => Some(EnemyAction::Pursue { speed: 140.0 }),
+            EnemyState::Pursue => Some(EnemyAction::Pursue { speed: 200.0 }),
             EnemyState::LungeAttack => Some(EnemyAction::LungeAttack {
                 before_lunge_timer: Timer::from_seconds(1.0, TimerMode::Once),
                 after_lunge_timer: Timer::from_seconds(2.0, TimerMode::Once),
-                speed: 100.0,
+                speed: 200.0,
             }),
             EnemyState::SpewAttack => Some(EnemyAction::SpewAttack {
                 spew_timer: Timer::from_seconds(5.0, TimerMode::Once),
                 spew_rate: 1.0,
-                spew_min_velocity: 100.0,
-                spew_max_velocity: 100.0,
+                spew_min_velocity: 200.0,
+                spew_max_velocity: 200.0,
             }),
         }
     }
