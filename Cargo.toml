@@ -82,3 +82,4 @@ bevy_editor_pls = "0.5.0"
 
 [build-dependencies]
 embed-resource = "1.4"
+
